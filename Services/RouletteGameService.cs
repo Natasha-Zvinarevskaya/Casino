@@ -33,7 +33,9 @@ namespace Casino.Services
         {
             Random rand = new Random();
             int start = rand.Next(0, roulette.Count);
-            var test = "2565";
+            var test1 = "2565";
+           
+            var test = "pO";
            
             Sector droppSector = roulette[start];
             int i = rand.Next(10, 50);
