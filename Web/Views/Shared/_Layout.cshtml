@@ -45,5 +45,30 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+    <script>
+        const ws = new WebSocket("wss://localhost:7129/ws");
+        ws.onopen = () => console.log("open");
+        ws.onmessage = e => console.log("srv:", e.data);
+        ws.onclose = () => console.log("close");
+
+        function send() {
+          const message = {
+            Controller: "Test",
+            Method: "SendMessage",
+            Value: { Text: "Привет с фронта!" }
+          };
+          ws.send(JSON.stringify(message));
+        }
+
+        // Для метода с несколькими параметрами:
+        function sendMulti() {
+          const message = {
+            Controller: "Test",
+            Method: "MultiParam",
+            Value: { text: "hello", level: 5 }
+          };
+          ws.send(JSON.stringify(message));
+        }
+    </script>
 </body>
 </html>

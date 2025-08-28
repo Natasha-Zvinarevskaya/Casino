@@ -1,0 +1,38 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Test</title>
+</head>
+<body>
+    <h1>WebSocket тест</h1>
+    <button onclick="sendMessage()">Отправить сообщение</button>
+
+    <script>
+        const socket = new WebSocket("ws://localhost:5000/ws");
+
+        socket.onopen = () => {
+            console.log("Соединение установлено");
+        };
+
+        socket.onmessage = (event) => {
+            console.log("Сообщение от сервера:", event.data);
+        };
+
+        socket.onclose = () => {
+            console.log("Соединение закрыто");
+        };
+
+        function sendMessage() {
+            const message = {
+                Controller: "Test",
+                Method: "SendMessage",
+                Value: { Text: "Привет от фронтенда!" }
+            };
+
+            socket.send(JSON.stringify(message));
+        }
+    </script>
+</body>
+</html>
+

@@ -11,7 +11,7 @@ namespace Casino.Services.Enums.RouletteGame
     /// </summary>
     public enum SectorValue
     {
-        0,
+        
 
     }
 }
