@@ -34,6 +34,8 @@ namespace Casino.Services
             Random rand = new Random();
             int start = rand.Next(0, roulette.Count);
 
+            var kek = 32;
+
             Sector droppSector = roulette[start];
             int i = rand.Next(10, 50);
             for (; i > 0;)
