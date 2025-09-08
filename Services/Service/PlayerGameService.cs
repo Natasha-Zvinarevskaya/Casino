@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Casino.Services
+namespace Casino.Services.Service
 {
     public class PlayerGameService : IPlayerGameService
     {

@@ -2,6 +2,7 @@
 using Casino.Services.Interfaces;
 using Casino.Services.Models.BlackjackGame.Requests;
 using Casino.Services.Models.PlayerGameService.Request;
+using Casino.Services.Service;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 

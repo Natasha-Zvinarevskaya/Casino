@@ -46,7 +46,7 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
     <script>
-        const ws = new WebSocket("wss://localhost:7129/ws");
+        const ws = new WebSocket("wss://localhost:7129/ws?token=FA71B9F4-BF59-4F0E-9234-67AD260444C4&test=true");
         ws.onopen = () => console.log("open");
         ws.onmessage = e => console.log("srv:", e.data);
         ws.onclose = () => console.log("close");

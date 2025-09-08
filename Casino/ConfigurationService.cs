@@ -1,6 +1,6 @@
 ﻿using Casino.DataContext;
-using Casino.Services;
 using Casino.Services.Interfaces;
+using Casino.Services.Service;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

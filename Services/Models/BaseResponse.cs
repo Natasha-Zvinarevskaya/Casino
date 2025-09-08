@@ -22,6 +22,9 @@ namespace Casino.Services.Models
     }
         public class BaseResponse<T>:BaseResponse
         {
+        /// <summary>
+        /// Все данные ответа
+        /// </summary>
             public T Data { get; set; }
             public BaseResponse(T data):base ()
 

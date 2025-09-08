@@ -1,5 +1,4 @@
 using Casino.DataContext;
-using Casino.Services;
 using Casino.Services.Interfaces;
 using Casino.Web.WebSockets;
 using Microsoft.AspNetCore.Mvc;
@@ -9,6 +8,10 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Casino.Services.Service;
+using Microsoft.AspNetCore.Authentication;
+using Azure.Core;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Web
 {
@@ -23,6 +26,8 @@ namespace Web
 
             builder.Services.AddDbContext<CasinoDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString(nameof(CasinoDbContext))));
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IUserSessionService, UserSessionService>();
+            builder.Services.AddSingleton<Casino.Web.WebSockets.WebSocketManager>();
 
             builder.Services.AddAuthentication("Cookies"); //Сервисы аутенфикации через куки 
             builder.Services.AddAuthorization(); //Сервисы авторизации
@@ -54,6 +59,9 @@ namespace Web
 
             app.UseCors(builder => builder.AllowAnyOrigin());
 
+            //Подключение сервисов,чтобы передать значение переменной
+            var serviceProvider =builder.Services.BuildServiceProvider();
+            
             // Для вебСокета
             app.Map("/ws", async context =>
             {
@@ -62,10 +70,28 @@ namespace Web
                     context.Response.StatusCode = 400;
                     return;
                 }
+                var userSessionService = serviceProvider.GetService<IUserSessionService>();
 
+                //Ищем,есть ли у пользователя токен 
+                var token = context.Request.Query.FirstOrDefault(x=>x.Key == "token");
+                //проверка наличия токена
+                if (string.IsNullOrEmpty(token.Value))
+                    throw new Exception ("Токен не найден. Доступ закрыт.");
+
+               var userResponse = userSessionService.CheckUser(token.Value);
+                if (!userResponse.IsSucces)
+                    throw new Exception("Пользователь не найден.");
+                
+                var user = userResponse.Data;
+                
                 using var socket = await context.WebSockets.AcceptWebSocketAsync();
                 var ct = CancellationToken.None;
+                
+                var webSocketManager= serviceProvider.GetService<Casino.Web.WebSockets.WebSocketManager>();
 
+
+                var wsUser = new WsUser { Email = user.Email, Name = user.Name, Token = Guid.Parse(token.Value), UserId = user.Id};
+                webSocketManager.AddSocket(socket, wsUser);
                 while (socket.State == WebSocketState.Open)
                 {
                     var messageJson = await WebSocketsHelper.ReceiveStringAsync(socket, ct);
@@ -73,6 +99,9 @@ namespace Web
 
                     await WebSocketsHelper.DispatchToControllerAsync(context, socket, messageJson, ct);
                 }
+                
+                //Нужно создать событие , отслеживающие закрытие сокета
+                webSocketManager.RemoveSocket(socket);
             });
 
             // Нужно, чтобы обычные контроллеры работали через HTTP (если нужно)

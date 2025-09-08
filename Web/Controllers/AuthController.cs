@@ -18,14 +18,12 @@ namespace Casino.Web.Controllers
         {
             _userService = userService;
         }
-        public IActionResult Index()
-        {
-            return View();
-        }
+       
 
         [HttpPost]
         [Route("Register")]
-        public IActionResult Register( RegisterRequest user)
+        //public IActionResult Register( RegisterRequest user)
+        public IActionResult Register ( RegisterRequest user)
         {
             var userId = _userService.Registration(user);
             return Json(userId);
@@ -40,7 +38,11 @@ namespace Casino.Web.Controllers
                 var loginResponse = _userService.Login(user);
                 if (loginResponse.IsSucces)
                 {
-                    Request.HttpContext.Session.SetString("Auth-Token", loginResponse.Data.Token.ToString());
+                    //Request.HttpContext.Session.SetString("Auth-Token", loginResponse.Data.Token.ToString());
+                    //context.Response.Cookies.Append("name", "Tom");
+
+                    Request.HttpContext.Response.Cookies.Append("Auth-Token", loginResponse.Data.Token.ToString());
+
                     return Json(new BaseResponse());
                 }
 
@@ -49,6 +51,10 @@ namespace Casino.Web.Controllers
 
         }
 
+        public IActionResult Index ()
+        {
+            return View();
+        }
 
     }
 }

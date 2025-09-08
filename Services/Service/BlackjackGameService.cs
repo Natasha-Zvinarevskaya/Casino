@@ -5,7 +5,7 @@ using Casino.Services.Models.BlackjackGame;
 using Casino.Services.Models.BlackjackGame.Requests;
 using Casino.Services.Models.PlayerGameService.Request;
 
-namespace Casino.Services
+namespace Casino.Services.Service
 {
     /// <summary>
     /// Класс процесса игры

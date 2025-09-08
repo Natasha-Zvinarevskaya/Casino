@@ -1,0 +1,90 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    Layout = null;
+}
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Casino — Авторизация</title>
+    <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+    <div class="bg"></div>
+    <main class="container">
+        <header class="brand">
+            <div class="logo">♠</div>
+            <h1>Casino<span>Auth</span></h1>
+        </header>
+
+
+        <section class="card">
+            <nav class="tabs" role="tablist" aria-label="Вкладки формы">
+                <button class="tab active" data-tab="login" aria-selected="true">Вход</button>
+                <button class="tab" data-tab="register" aria-selected="false">Регистрация</button>
+            </nav>
+
+
+            <!-- Login Form -->
+            <form id="loginForm" class="form show" novalidate autocomplete="on">
+                <div class="field">
+                    <label for="loginEmail">Email</label>
+                    <input id="loginEmail" name="email" type="email" placeholder="you@example.com" required />
+                    <small class="error" data-for="loginEmail"></small>
+                </div>
+                <div class="field">
+                    <label for="loginPassword">Пароль</label>
+                    <input id="loginPassword" name="password" type="password" placeholder="••••••••" required minlength="6" />
+                    <small class="error" data-for="loginPassword"></small>
+                </div>
+                <button type="submit" class="btn primary" id="loginSubmit">
+                    <span class="btn-text">Войти</span>
+                    <span class="spinner" aria-hidden="true"></span>
+                </button>
+                <div class="hint">Нет аккаунта? <a href="#" data-switch="register">Зарегистрируйтесь</a></div>
+            </form>
+
+
+            <!-- Register Form -->
+            <form id="registerForm" class="form" novalidate autocomplete="on">
+                <div class="field">
+                    <label for="regEmail">Email</label>
+                    <input id="regEmail" name="email" type="email" placeholder="you@example.com" required />
+                    <small class="error" data-for="regEmail"></small>
+                </div>
+                <div class="field">
+                    <label for="regPassword">Пароль</label>
+                    <input id="regPassword" name="password" type="password" placeholder="Минимум 6 символов" required minlength="6" />
+                    <small class="error" data-for="regPassword"></small>
+                </div>
+                <div class="field">
+                    <label for="regPassword2">Повторите пароль</label>
+                    <input id="regPassword2" name="password2" type="password" placeholder="Повтор пароля" required minlength="6" />
+                    <small class="error" data-for="regPassword2"></small>
+                </div>
+                <button type="submit" class="btn primary" id="registerSubmit">
+                    <span class="btn-text">Зарегистрироваться</span>
+                    <span class="spinner" aria-hidden="true"></span>
+                </button>
+                <div class="hint">Уже есть аккаунт? <a href="#" data-switch="login">Войти</a></div>
+            </form>
+        </section>
+
+
+        <footer class="footnote">
+            <div class="status" id="statusBar" role="status" aria-live="polite"></div>
+        </footer>
+    </main>
+
+
+    <template id="toastTemplate">
+        <div class="toast" role="status"></div>
+    </template>
+
+
+    <script src="js/auth.js"></script>
+</body>
+</html>
