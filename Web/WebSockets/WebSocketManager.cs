@@ -12,7 +12,7 @@ namespace Casino.Web.WebSockets
         //Коллекция - хранит всю инфу об открытом веб сокете и пользователе, подключенному к этому веб сокету
         //ридонли позволяет изменять данные внутри коллецкии, но не позволяет полностью перезаписывать эту переменную на другие данные
         private readonly ConcurrentDictionary<WebSocket, WsUser> _connections = new();
-        
+
         /// <summary>
         /// Добавить веб сокет и пользователя в коллекцию
         /// </summary>
@@ -21,15 +21,24 @@ namespace Casino.Web.WebSockets
             _connections.TryAdd(socket, user);
         }
         /// <summary>
+        /// Получить пользователя по сокету
+        /// </summary>
+        /// <param name="socket"></param>
+        /// <returns></returns>
+        public WsUser GetUser(WebSocket socket)
+        {
+            return _connections.TryGetValue(socket, out var user) ? user : (WsUser)null;
+        }
+        /// <summary>
         /// Удаление веб сокета и пользователя из коллекции
         /// </summary>
         /// <param name="socket">сокет</param>
         /// <param name="user">ползователь</param>
-        public void RemoveSocket (WebSocket socket)
+        public void RemoveSocket(WebSocket socket)
         {
             //Пробует найти сокет по значению, если находит то создает новую переменную юзерИд, которую мы отправляем обратно
             //if (_connections.TryGetValue(socket, out var userId) == null)-получить пользователя
-                _connections.TryRemove(socket,out _);
+            _connections.TryRemove(socket, out _);
         }
     }
 }
