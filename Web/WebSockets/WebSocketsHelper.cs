@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text;
 using Casino.DataContext;
+using Casino.Services.Models.BlackjackGame;
 
 namespace Casino.Web.WebSockets
 {
@@ -63,7 +64,28 @@ namespace Casino.Web.WebSockets
 
                 if (ctrlType == null)
                 {
-                    await SendSocketResponse(socket, new { error = $"Controller '{targetTypeName}' not found." }, ct);
+                    //await SendSocketResponse(socket, new { error = $"Controller '{targetTypeName}' not found." }, ct);
+                    await SendSocketResponse(socket, new
+                    {
+                        IsSucces = true,
+                        ErrorMessage = "",
+                        Data = new
+                        {
+                            GameId = 1,
+                            Status = 0,
+                            DealerCards = new List<Card>() {
+                                new Card() { Suit = Services.Enums.BlackjackGame.CardSuit.Hearts, Value = Services.Enums.BlackjackGame.CardValue.Seven },
+                             new Card() { Suit = Services.Enums.BlackjackGame.CardSuit.Clubs, Value = Services.Enums.BlackjackGame.CardValue.Seven }
+                            },
+                            PLayerCards = new List<Card>() {
+                                new Card() { Suit = Services.Enums.BlackjackGame.CardSuit.Hearts, Value = Services.Enums.BlackjackGame.CardValue.Eight },
+                             new Card() { Suit = Services.Enums.BlackjackGame.CardSuit.Clubs, Value = Services.Enums.BlackjackGame.CardValue.Eight }
+                            },
+                        }
+                    }
+              , ct);
+
+
                     return;
                 }
 
