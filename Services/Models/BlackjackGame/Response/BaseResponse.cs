@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Casino.Services.Models
+namespace Casino.Services.Models.BlackjackGame.Response
 {
     public class BaseResponse
     {

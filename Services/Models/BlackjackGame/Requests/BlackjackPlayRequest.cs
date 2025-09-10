@@ -11,6 +11,7 @@ namespace Casino.Services.Models.BlackjackGame.Requests
         /// <summary>
         /// Ид игры
         /// </summary>
-        public int GameId { get; set; }
+       // public int GameId { get; set; }
+       public decimal Bet { get; set; }
     }
 }

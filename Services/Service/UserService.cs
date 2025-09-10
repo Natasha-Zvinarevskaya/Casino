@@ -1,6 +1,7 @@
 ﻿using Casino.DataContext;
 using Casino.Services.Interfaces;
 using Casino.Services.Models;
+using Casino.Services.Models.BlackjackGame.Response;
 using Casino.Services.Request.Users;
 using Microsoft.EntityFrameworkCore;
 using System;

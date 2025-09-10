@@ -2,7 +2,7 @@
 {
     using Microsoft.AspNetCore.Mvc;
 
-    public abstract class WsController : ControllerBase
+    public abstract class WsController : Controller
     {
   
 

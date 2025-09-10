@@ -28,6 +28,12 @@ namespace Web
             builder.Services.AddDbContext<CasinoDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString(nameof(CasinoDbContext))));
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IUserSessionService, UserSessionService>();
+            builder.Services.AddScoped<IBlackJackGameService, BlackjackService>();
+            builder.Services.AddScoped<IPlayerGameService, PlayerGameService>();
+            builder.Services.AddScoped<IUserTransactionService, UserTransactionService>();
+
+
+
             builder.Services.AddSingleton<Casino.Web.WebSockets.WebSocketManager>();
               
             builder.Services.AddAuthentication("Cookies"); //Сервисы аутенфикации через куки 
@@ -125,6 +131,7 @@ namespace Web
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
+
 
             app.Run();
 

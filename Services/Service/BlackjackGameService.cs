@@ -10,7 +10,7 @@ namespace Casino.Services.Service
     /// <summary>
     /// Класс процесса игры
     /// </summary>
-    public class BlackjackGameService 
+    public class BlackjackGameService  
     {
         private IPlayerGameService _playerGameService;
         public BlackjackGameService(IPlayerGameService playerGameService)
@@ -51,7 +51,7 @@ namespace Casino.Services.Service
             if (_playerScore > 21)
             {
                 Console.WriteLine("Вы проиграли!");
-                var endGameRequest = new EndGameRequest() { ResultGame = EnumStatusGame.Loss, GameId = request.GameId};
+                var endGameRequest = new EndGameRequest() { ResultGame = EnumStatusGame.Loss, GameId = 1 }; //request.GameId};
                 _playerGameService.EndGame(endGameRequest);
                 ShowScores();
             }
@@ -59,7 +59,7 @@ namespace Casino.Services.Service
             else
                 DealerTurn();
 
-            DetermineWinner(request.GameId);
+            DetermineWinner(1);//request.GameId);
         }
         /// <summary>
         /// Показать карты в руке игрока

@@ -1,6 +1,6 @@
 ﻿using Casino.DataContext;
 using Casino.Services.Interfaces;
-using Casino.Services.Models;
+using Casino.Services.Models.BlackjackGame.Response;
 using Casino.Services.Models.UserSessionServiceModel.Response;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -46,5 +46,15 @@ namespace Casino.Services.Service
             return new BaseResponse<CheckUserResponse>(userModel);
 
         }
+        public void UserExit (int userSessionId)
+        {
+            var db = new CasinoDbContext(_options);
+            var userSession = db.UserSessions.FirstOrDefault(x => x.Id == userSessionId);
+            if (userSession == null)
+                throw new Exception("Сессия не найдена.");
+            db.UserSessions.Remove(userSession);
+            db.SaveChanges();
+        }
     }
+
 }

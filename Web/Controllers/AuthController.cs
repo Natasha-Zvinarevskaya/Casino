@@ -1,5 +1,6 @@
 ﻿using Casino.Services.Interfaces;
 using Casino.Services.Models;
+using Casino.Services.Models.BlackjackGame.Response;
 using Casino.Services.Request.Users;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
