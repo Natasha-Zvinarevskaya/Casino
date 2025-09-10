@@ -22,7 +22,6 @@ namespace Casino.Web.Controllers
 
         [HttpPost]
         [Route("Register")]
-        //public IActionResult Register( RegisterRequest user)
         public IActionResult Register ( RegisterRequest user)
         {
             var userId = _userService.Registration(user);
