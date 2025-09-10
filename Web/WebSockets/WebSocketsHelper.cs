@@ -3,6 +3,8 @@ using System.Net.WebSockets;
 using System.Reflection;
 using System.Text.Json;
 using System.Text;
+using Casino.DataContext;
+using Casino.Services.Models.BlackjackGame;
 
 namespace Casino.Web.WebSockets
 {
@@ -10,7 +12,7 @@ namespace Casino.Web.WebSockets
     {
         // ----------------- Вспомогательные методы -----------------
 
-       public  static async Task<string?> ReceiveStringAsync(WebSocket socket, CancellationToken ct)
+        public static async Task<string?> ReceiveStringAsync(WebSocket socket, CancellationToken ct)
         {
             var buffer = new byte[4 * 1024];
             using var ms = new MemoryStream();
@@ -28,7 +30,7 @@ namespace Casino.Web.WebSockets
             return Encoding.UTF8.GetString(ms.ToArray());
         }
 
-        public static async Task DispatchToControllerAsync(HttpContext context, WebSocket socket, string messageJson, CancellationToken ct)
+        public static async Task DispatchToControllerAsync(IServiceProvider scopedServices, HttpContext context, WebSocket socket, string messageJson, CancellationToken ct)
         {
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
@@ -62,7 +64,28 @@ namespace Casino.Web.WebSockets
 
                 if (ctrlType == null)
                 {
-                    await SendSocketResponse(socket, new { error = $"Controller '{targetTypeName}' not found." }, ct);
+                    //await SendSocketResponse(socket, new { error = $"Controller '{targetTypeName}' not found." }, ct);
+                    await SendSocketResponse(socket, new
+                    {
+                        IsSucces = true,
+                        ErrorMessage = "",
+                        Data = new
+                        {
+                            GameId = 1,
+                            Status = 0,
+                            DealerCards = new List<Card>() {
+                                new Card() { Suit = Services.Enums.BlackjackGame.CardSuit.Hearts, Value = Services.Enums.BlackjackGame.CardValue.Seven },
+                             new Card() { Suit = Services.Enums.BlackjackGame.CardSuit.Clubs, Value = Services.Enums.BlackjackGame.CardValue.Seven }
+                            },
+                            PLayerCards = new List<Card>() {
+                                new Card() { Suit = Services.Enums.BlackjackGame.CardSuit.Hearts, Value = Services.Enums.BlackjackGame.CardValue.Eight },
+                             new Card() { Suit = Services.Enums.BlackjackGame.CardSuit.Clubs, Value = Services.Enums.BlackjackGame.CardValue.Eight }
+                            },
+                        }
+                    }
+              , ct);
+
+
                     return;
                 }
 
@@ -76,23 +99,29 @@ namespace Casino.Web.WebSockets
                     return;
                 }
 
-                // Безопасность: разрешаем вызывать только помеченные методы
-                var hasAttr = method.GetCustomAttribute(typeof(SocketActionAttribute)) != null;
-                if (!hasAttr)
+
+
+
+                var connManager = scopedServices.GetRequiredService<WebSocketManager>();
+                //Находим пользователя который делает запрос
+                var user = connManager.GetUser(socket);
+                if (user == null)
                 {
-                    await SendSocketResponse(socket, new { error = $"Method '{methodName}' is not allowed for socket invocation." }, ct);
+                    await SendSocketResponse(socket, new { error = "Unknown session" }, CancellationToken.None);
                     return;
                 }
 
-                // Создаем контроллер через DI, подставляем HttpContext
-                var scopeServiceProvider = context.RequestServices;
-                var controllerInstance = ActivatorUtilities.CreateInstance(scopeServiceProvider, ctrlType) as ControllerBase;
+
+               
+                var controllerInstance = ActivatorUtilities.CreateInstance(scopedServices, ctrlType) as WsController;
                 if (controllerInstance == null)
                 {
                     await SendSocketResponse(socket, new { error = "Unable to create controller instance." }, ct);
                     return;
                 }
                 controllerInstance.ControllerContext = new ControllerContext { HttpContext = context };
+                //Сохраняем в контролере информацию о пользователе
+                controllerInstance.User = user;
 
                 // Подготовка аргументов метода
                 var parameters = method.GetParameters();
