@@ -31,7 +31,7 @@ namespace Casino
                 var request = new StartGameRequest() { UserId = 4, Game = answerUser };
                 var gameId = playerGameService.StartGame(request);
 
-                new BlackjackGameService(playerGameService).Play(new BlackjackPlayRequest() { GameId = gameId });
+                new BlackjackGameService(playerGameService).Play(new BlackjackPlayRequest() { });//GameId = gameId });
                 Console.WriteLine("Чтобы сыграть снова нажмите любую кнопку.");
                 Console.ReadLine();
             }

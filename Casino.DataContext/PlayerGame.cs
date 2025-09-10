@@ -42,5 +42,6 @@ namespace Casino.DataContext
         public int UserId { get; set; }
 
         public GameSettings GameSettings { get; set; }
+        public GameHistory GameHistory { get; set; }
     }
 }

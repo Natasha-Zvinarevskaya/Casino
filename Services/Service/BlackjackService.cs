@@ -37,19 +37,40 @@ namespace Casino.Services.Service
         /// </summary>
         private int _playerScore = 0;
         private int _dealerScore = 0;
-        public BaseResponse<BlackJackGameModel> Play(BlackjackPlayRequest request)
+        /// <summary>
+        /// Старт игры при нажатии кнопки на сайте 
+        /// </summary>
+        /// <param name="request">Сумма ставки , выбранная пользователем</param>
+        /// <param name="userId">пользователь</param>
+        /// <returns></returns>
+        public BaseResponse<BlackJackGameModel> Play(BlackjackPlayRequest request,int userId)
         {
+            var startRequest = new StartGameRequest
+            {
+                Bet = request.Bet,
+                UserId = userId,
+                Game = 1
+            };
+            var gameId=_playerGameService.StartGame(startRequest);
             List<Card> gameDeck = _deck.Shuffle();
             _playerHand.Add(_deck.DealCard());
             _playerHand.Add(_deck.DealCard());
-           // ShowCardsPlayers();
+
             _dealerHand.Add(_deck.DealCard());
             _dealerHand.Add(_deck.DealCard());
-          
-                var blackjackGameModel = new BlackJackGameModel { GameId = 1, Status = EnumStatusGame.None, PlayerCards = _playerHand, DealerCards = _dealerHand };
+
+            var cardsDeck = _deck.GetCards();
+            var saveGameHistoryRequest = new SaveGameHistoryRequest { Deck = cardsDeck, PlayerHand = _playerHand, DealerHand = _dealerHand, GameId = gameId };
+            _playerGameService.SaveGameHistory(saveGameHistoryRequest);
+                var blackjackGameModel = new BlackJackGameModel { GameId = gameId, Status = EnumStatusGame.None, PLayerCards = _playerHand, DealerCards = _dealerHand };
                 return new BaseResponse<BlackJackGameModel>(blackjackGameModel);
-                
+            //Сделать проверку на выигрыш. (10+11=21). Отправить измененный статус игры (победа/проигрыш)
             
+        }
+        public BaseResponse<BlackJackGameModel> PlayerTurn(int gameId)
+        {
+            _playerHand.Add(_deck.DealCard());
+            return new BaseResponse<BlackJackGameModel>("");
         }
 
         //private BaseResponse<BlackJackGameModel> PlayerTurn()

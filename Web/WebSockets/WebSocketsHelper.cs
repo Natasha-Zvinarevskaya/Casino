@@ -164,7 +164,7 @@ namespace Casino.Web.WebSockets
                         // Task<T> — получим результат
                         var resultProperty = taskType.GetProperty("Result");
                         var resultValue = resultProperty?.GetValue(task);
-                        await SendSocketResponse(socket, new { ok = true, result = resultValue }, ct);
+                        await SendSocketResponse(socket, resultValue, ct);
                     }
                     else
                     {
@@ -174,7 +174,7 @@ namespace Casino.Web.WebSockets
                 else
                 {
                     // Синхронный результат
-                    await SendSocketResponse(socket, new { ok = true, result = invokeResult }, ct);
+                    await SendSocketResponse(socket, invokeResult, ct);
                 }
             }
             catch (Exception ex)

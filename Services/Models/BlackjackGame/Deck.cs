@@ -53,5 +53,9 @@ namespace Casino.Services.Models.BlackjackGame
             return card;
 
         }
+        public List<Card> GetCards ()
+        {
+            return _cards;
+        }
     }
 }

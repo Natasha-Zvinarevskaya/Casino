@@ -11,6 +11,7 @@ namespace Casino.Services.Models.PlayerGameService.Request
     {
         public int UserId { get; set; }
         public int Game { get; set; }
+        public decimal Bet { get; set; }
 
     }
 }

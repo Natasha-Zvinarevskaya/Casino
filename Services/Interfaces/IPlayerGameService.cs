@@ -13,5 +13,7 @@ namespace Casino.Services.Interfaces
     {
         int StartGame(StartGameRequest request);
         void EndGame(EndGameRequest request);
+        void SaveGameHistory(SaveGameHistoryRequest request);
+
     }
 }

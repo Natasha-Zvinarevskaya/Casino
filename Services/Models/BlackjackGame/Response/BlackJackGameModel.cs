@@ -12,7 +12,7 @@ namespace Casino.Services.Models.BlackjackGame.Response
         public int GameId { get; set; }
         public EnumStatusGame Status { get; set; }
         public List<Card> DealerCards { get;set; }
-        public List<Card> PlayerCards { get; set; }
+        public List<Card> PLayerCards { get; set; }
 
     }
 }
