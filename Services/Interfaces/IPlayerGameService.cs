@@ -1,5 +1,6 @@
 ﻿using Casino.DataContext;
 using Casino.Services.Models;
+using Casino.Services.Models.BlackjackGame.Response;
 using Casino.Services.Models.PlayerGameService.Request;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,8 @@ namespace Casino.Services.Interfaces
         int StartGame(StartGameRequest request);
         void EndGame(EndGameRequest request);
         void SaveGameHistory(SaveGameHistoryRequest request);
+        BaseResponse<CardsHistoryJson> ReturnGameHistory(int gameId);
+
 
     }
 }

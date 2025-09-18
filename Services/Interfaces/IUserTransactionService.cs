@@ -1,5 +1,6 @@
 ﻿using Casino.DataContext;
 using Casino.Services.Models;
+using Casino.Services.Models.UserTransactionService.Request;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace Casino.Services.Interfaces
     public interface IUserTransactionService
     {
         void EndGameTransaction(int gameId);
-        void ReplenishmentBalance(int userId);
+        void ReplenishmentBalance(TopUpBalanceRequest request);
 
 
     }

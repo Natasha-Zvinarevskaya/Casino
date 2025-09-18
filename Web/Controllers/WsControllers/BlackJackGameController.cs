@@ -14,12 +14,12 @@ namespace Casino.Web.Controllers.WsControllers
             _blackJackGameService = blackJackGameService;
         }
 
-       
+
         /// <summary>
         /// Начало игры 
         /// </summary>
         /// <param name="request">Ставка пользователя</param>
-        /// <returns></returns>
+        /// <returns>ид игры, статус игры (победа, проигрыш и т.д.), карты в руках дилера и игрока</returns>
         public BaseResponse<BlackJackGameModel> StartGame(BlackjackPlayRequest request)
         {
             var response = _blackJackGameService.Play(request,User.UserId);
@@ -31,15 +31,21 @@ namespace Casino.Web.Controllers.WsControllers
         /// </summary>
         /// <param name="">Ид игры</param>
         /// <returns>ид игры, статус игры (победа, проигрыш и т.д.), карты в руках дилера и игрока</returns>
-        public BaseResponse<BlackJackGameModel> TurnPlayer(int gameId)
+        public BaseResponse<BlackJackGameModel> TurnPlayer(TurnPlayerRequest gameId)
         {
-            var response = _blackJackGameService.PlayerTurn(gameId);
+            var response = _blackJackGameService.PlayerTurn(gameId.gameId);
             return response;
         }
-        //public BaseResponse<BlackJackGameModel> SkipPlayer(gameId)
-        //{
-
-        //}
+        /// <summary>
+        /// Пропусск хода игрока
+        /// </summary>
+        /// <param name="gameId">ИД игры</param>
+        /// <returns> ид игры, статус игры, карты в руках игроков</returns>
+        public BaseResponse<BlackJackGameModel> SkipPlayer(TurnPlayerRequest gameId)
+        {
+            var response = _blackJackGameService.SkipPlayer(gameId.gameId);
+            return response;
+        }
     }
 }
 

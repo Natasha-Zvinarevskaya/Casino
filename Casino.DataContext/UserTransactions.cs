@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Casino.DataContext
 {
     /// <summary>
-    /// Транзакции полььзователя
+    /// Транзакции пользователя
     /// </summary>
     public class UserTransactions
     {

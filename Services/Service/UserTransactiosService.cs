@@ -3,6 +3,7 @@ using Casino.DataContext;
 using Casino.DataContext.Enums;
 using Casino.Services.Interfaces;
 using Casino.Services.Models;
+using Casino.Services.Models.UserTransactionService.Request;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 using System;
@@ -73,64 +74,74 @@ namespace Casino.Services.Service
             }
         }
 
-       
-           public void ReplenishmentBalance(int userId)
+       /// <summary>
+       /// Пополнение баланса
+       /// </summary>
+       /// <param name="userId">ид пользователя</param>
+       /// <exception cref="Exception"></exception>
+           public void ReplenishmentBalance(TopUpBalanceRequest request )
         {
 
-            Console.Clear();
-            Console.WriteLine("Выберите сумму пополнения баланса: \n1. 10 монет.\n2.30 монет.\n3.50 монет. ");
-            var userAnswer = Console.ReadLine();
+            ////Console.Clear();
+            ////Console.WriteLine("Выберите сумму пополнения баланса: \n1. 10 монет.\n2.30 монет.\n3.50 монет. ");
+            ////var userAnswer = Console.ReadLine();
             var db = new CasinoDbContext(_options);
-            var user = db.Users.FirstOrDefault(x => x.Id == userId);
+            var user = db.Users.FirstOrDefault(x => x.Id == request.UserId);
             if (user == null)
                 throw new Exception("Пользователь не найден.");
 
-            var transactionReplenisment = new UserTransactions()
+            var transactionReplenishment = new UserTransactions()
             {
                 Date = DateTime.UtcNow,
                 Type = EnumTypeTransaction.Replenishment,
-                UsersId = userId
+                UsersId = request.UserId,
+                Amount = request.Count
+
+
             };
             using (var transaction = db.Database.BeginTransaction())
             {
                 try
                 {
-                    switch (userAnswer)
-                    {
-                        case "1":
-                            
-                            transactionReplenisment.Amount = 10;
-                            user.Balance += 10;
-                            break;
-                        case "2":
-                            transactionReplenisment.Amount = 30;
-                            user.Balance += 30;
+                    user.Balance += request.Count;
 
-                            break;
-                        case "3":
-                            transactionReplenisment.Amount = 50;
-                            user.Balance += 50;
+                    //    switch (userAnswer)
+                    //    {
+                    //        case "1":
 
-                            break;
-                        default:
-                            Console.WriteLine("Неверно выбрана сумма.");
-                            break;
-                            
+                    //            transactionReplenisment.Amount = 10;
+                    //            user.Balance += 10;
+                    //            break;
+                    //        case "2":
+                    //            transactionReplenisment.Amount = 30;
+                    //            user.Balance += 30;
 
-                    }
-                    db.UserTransactions.Add(transactionReplenisment);
-                    db.SaveChanges();
-                    transaction.Commit();
-                }
-                catch(Exception ex)
-                {
-                    transaction.Rollback();
-                }
+                    //            break;
+                    //        case "3":
+                    //            transactionReplenisment.Amount = 50;
+                    //            user.Balance += 50;
+
+                    //            break;
+                    //        default:
+                    //            Console.WriteLine("Неверно выбрана сумма.");
+                    //            break;
+
+
+                //}
+                        db.UserTransactions.Add(transactionReplenishment);
+                db.SaveChanges();
+                transaction.Commit();
             }
-       
-            
-            
+                    catch(Exception ex)
+                    {
+                transaction.Rollback();
+            }
         }
+
+
+
+    }
+        
         
     }
 }

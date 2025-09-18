@@ -2,8 +2,10 @@
 using Casino.DataContext.Enums;
 using Casino.Services.Interfaces;
 using Casino.Services.Models;
+using Casino.Services.Models.BlackjackGame.Response;
 using Casino.Services.Models.PlayerGameService.Request;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using System;
 using System.Collections.Generic;
@@ -83,9 +85,28 @@ namespace Casino.Services.Service
             var db = new CasinoDbContext(_options);
             var historyModel = new CardsHistoryJson { Deck = request.Deck, PlayerHand = request.PlayerHand, DealerHand = request.DealerHand };
             string historyModelJson = JsonSerializer.Serialize(historyModel);
-            var gameHistory = new GameHistory { CardsHistory = historyModelJson, PlayerGameId = request.GameId };
-            db.GameHistory.Add(gameHistory);
+            var gameHistory = db.GameHistory.FirstOrDefault(x => x.PlayerGameId == request.GameId);
+            if (gameHistory == null)
+            {
+                var saveGameHistory = new GameHistory { CardsHistory = historyModelJson, PlayerGameId = request.GameId };
+                db.GameHistory.Add(saveGameHistory);
+                db.SaveChanges();
+            }
+            else
+            {
+                gameHistory.CardsHistory = historyModelJson;          
+
+            }
             db.SaveChanges();
+        }
+        public BaseResponse<CardsHistoryJson> ReturnGameHistory (int gameId)
+        {
+            var db = new CasinoDbContext(_options);
+            var gameHistory = db.GameHistory.FirstOrDefault(x => x.Id == gameId);
+            if (gameHistory == null)
+                throw new Exception("Игра не найдена");
+            var cardsHistory = JsonSerializer.Deserialize<CardsHistoryJson>(gameHistory.CardsHistory);
+            return new BaseResponse<CardsHistoryJson>(cardsHistory);
         }
 
 

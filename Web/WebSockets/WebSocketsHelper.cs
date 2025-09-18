@@ -95,6 +95,7 @@ namespace Casino.Web.WebSockets
 
                 if (method == null)
                 {
+                    var methods = ctrlType.GetMethods(BindingFlags.Instance | BindingFlags.Public).ToList();
                     await SendSocketResponse(socket, new { error = $"Method '{methodName}' not found in controller '{targetTypeName}'." }, ct);
                     return;
                 }

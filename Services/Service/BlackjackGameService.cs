@@ -41,7 +41,7 @@ namespace Casino.Services.Service
         /// </summary>
         public void Play(BlackjackPlayRequest request)
         {
-            List<Card> gameDeck = _deck.Shuffle();
+                List<Card> gameDeck = _deck.Shuffle();
             _playerHand.Add(_deck.DealCard());
             _playerHand.Add(_deck.DealCard());
             ShowCardsPlayers();
