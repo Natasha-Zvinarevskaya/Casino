@@ -11,8 +11,8 @@ namespace Casino.Services.Interfaces
    public  interface IBlackJackGameService
     {
         BaseResponse<BlackJackGameModel> Play(BlackjackPlayRequest request,int userId);
-        BaseResponse<BlackJackGameModel> PlayerTurn(int gameId);
-         BaseResponse<BlackJackGameModel> SkipPlayer(int gameId);
+        BaseResponse<BlackJackGameModel> PlayerTurn(int gameId, int userId);
+         BaseResponse<BlackJackGameModel> SkipPlayer(int gameId, int userId);
 
 
 

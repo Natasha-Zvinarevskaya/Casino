@@ -14,6 +14,9 @@ namespace Casino.DataContext
     public class GameHistory
     {
         public int Id { get; set; }
+        /// <summary>
+        /// json формат карт дилера и карт игрока
+        /// </summary>
         public string CardsHistory { get; set; }
 
         public int PlayerGameId { get; set; }

@@ -4,6 +4,7 @@ using Casino.Services.Interfaces;
 using Casino.Services.Models;
 using Casino.Services.Models.BlackjackGame.Response;
 using Casino.Services.Models.PlayerGameService.Request;
+using Casino.Services.Models.PlayerGameService.Response;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Query.Internal;
@@ -19,8 +20,8 @@ namespace Casino.Services.Service
     public class PlayerGameService : IPlayerGameService
     {
         private IUserTransactionService _userService;
-        private DbContextOptions< CasinoDbContext> _options;
-        public PlayerGameService(IUserTransactionService userService,DbContextOptions <CasinoDbContext> options)
+        private DbContextOptions<CasinoDbContext> _options;
+        public PlayerGameService(IUserTransactionService userService, DbContextOptions<CasinoDbContext> options)
         {
             _userService = userService;
             _options = options;
@@ -40,20 +41,20 @@ namespace Casino.Services.Service
             //{
             //    _userService.ReplenishmentBalance(user.Id);
             //}
-            
-                var game = new PlayerGame()
-                {
-                    Date = DateTime.UtcNow,
-                    Game = (EnumGames)request.Game,
-                    GameSettings = new GameSettings() { AmountWin = 2 },
-                    AmountBet = request.Bet,
-                    Status = EnumStatusGame.None,
-                    UserId = request.UserId
 
-                };
+            var game = new PlayerGame()
+            {
+                Date = DateTime.UtcNow,
+                Game = (EnumGames)request.Game,
+                GameSettings = new GameSettings() { AmountWin = 2 },
+                AmountBet = request.Bet,
+                Status = EnumStatusGame.None,
+                UserId = request.UserId
+
+            };
             db.PlayerGames.Add(game);
             db.SaveChanges();
-       
+
             return game.Id;
 
         }
@@ -80,7 +81,7 @@ namespace Casino.Services.Service
         /// Запись в базу данных инфо о картах в руках и в колоде
         /// </summary>
         /// <param name="request"></param>
-        public void SaveGameHistory(SaveGameHistoryRequest request  )
+        public void SaveGameHistory(SaveGameHistoryRequest request)
         {
             var db = new CasinoDbContext(_options);
             var historyModel = new CardsHistoryJson { Deck = request.Deck, PlayerHand = request.PlayerHand, DealerHand = request.DealerHand };
@@ -94,19 +95,31 @@ namespace Casino.Services.Service
             }
             else
             {
-                gameHistory.CardsHistory = historyModelJson;          
+                gameHistory.CardsHistory = historyModelJson;
 
             }
             db.SaveChanges();
         }
-        public BaseResponse<CardsHistoryJson> ReturnGameHistory (int gameId)
+        /// <summary>
+        /// Вернуть историю игры
+        /// </summary>
+        /// <param name="gameId">ИД игры</param>
+        /// <param name="userId">ИД игрока</param>
+        /// <returns>Историю карт(колода, карты игрока, карты дилера) и статус игры</returns>
+        /// <exception cref="Exception"></exception>
+        public GetHistoryResponse GetHistory (int gameId,int userId)
         {
             var db = new CasinoDbContext(_options);
-            var gameHistory = db.GameHistory.FirstOrDefault(x => x.Id == gameId);
+            var gameHistory = db.GameHistory.FirstOrDefault(x => x.PlayerGameId == gameId);
             if (gameHistory == null)
                 throw new Exception("Игра не найдена");
             var cardsHistory = JsonSerializer.Deserialize<CardsHistoryJson>(gameHistory.CardsHistory);
-            return new BaseResponse<CardsHistoryJson>(cardsHistory);
+            var game = db.PlayerGames.FirstOrDefault(x => x.Id == gameId);
+            if (game == null)
+                throw new Exception("Игра не найдена.");
+            var response = new GetHistoryResponse { CardsHistory = cardsHistory, StatusGame = game.Status };
+
+            return response;
         }
 
 

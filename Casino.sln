@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Casino.DataContext", "Casin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Casino.Web", "Web\Casino.Web.csproj", "{5CECA724-26BF-4E65-A647-D2AFA2B4901D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Casino.Test", "Casino.Test\Casino.Test.csproj", "{EAD575E4-69A2-4AAE-81CD-BFCEF6C38E0F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{5CECA724-26BF-4E65-A647-D2AFA2B4901D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5CECA724-26BF-4E65-A647-D2AFA2B4901D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5CECA724-26BF-4E65-A647-D2AFA2B4901D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EAD575E4-69A2-4AAE-81CD-BFCEF6C38E0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EAD575E4-69A2-4AAE-81CD-BFCEF6C38E0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EAD575E4-69A2-4AAE-81CD-BFCEF6C38E0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EAD575E4-69A2-4AAE-81CD-BFCEF6C38E0F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

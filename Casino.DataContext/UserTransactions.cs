@@ -18,7 +18,7 @@ namespace Casino.DataContext
         /// </summary>
         public DateTime Date { get; set; }
         /// <summary>
-        /// Тип
+        /// Тип транзакции (победа/прогрыщ/ничья/пополнение баланса
         /// </summary>
         public EnumTypeTransaction Type { get; set; }
         /// <summary>

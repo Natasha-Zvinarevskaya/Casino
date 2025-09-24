@@ -1,0 +1,104 @@
+using Moq;
+using Casino.Services.Interfaces;
+using Casino.Services.Service;
+using Casino.Services.Models.BlackjackGame.Requests;
+using Casino.Services.Models.PlayerGameService.Request;
+using Casino.DataContext;
+using Microsoft.EntityFrameworkCore;
+
+namespace Casino.Test
+{
+    public class CasinoTest
+    {
+        [Fact]
+        public void Blackjack_Play()
+        {
+            //Arange 
+            var mock = new Mock<IPlayerGameService>();
+            var service = new BlackjackService(mock.Object);
+
+            int userId = 3;
+            BlackjackPlayRequest request = new BlackjackPlayRequest();
+            request.Bet = 100;
+            //var startRequest = new StartGameRequest { Bet = request.Bet, UserId = userId, Game = 1 };
+            mock.Setup(x => x.StartGame(It.IsAny<StartGameRequest>())).Returns<StartGameRequest>(x => 1);
+
+            //Act 
+            var result = service.Play(request, userId);
+
+            //Assert
+            Assert.NotNull(result);
+
+        }
+        [Fact]
+        public void Blackjack_Play_PlayersHave2Cards()
+        {
+            //Arange 
+            var mock = new Mock<IPlayerGameService>();
+            var service = new BlackjackService(mock.Object);
+
+            int userId = 3;
+            BlackjackPlayRequest request = new BlackjackPlayRequest();
+            request.Bet = 100;
+            //var startRequest = new StartGameRequest { Bet = request.Bet, UserId = userId, Game = 1 };
+            mock.Setup(x => x.StartGame(It.IsAny<StartGameRequest>())).Returns<StartGameRequest>(x => 1);
+
+            //Act 
+            var result = service.Play(request, userId);
+
+            //Assert
+            Assert.Equal(2, result.Data.PLayerCards.Count);
+            Assert.Equal(2, result.Data.DealerCards.Count);
+
+        }
+
+        [Fact]
+        public void UserTransationService_GetHistoryTransaction_Result()
+        {
+            //Arange
+            var contextOptions = GetContextWithData();
+            var service = new UserTransactionService(contextOptions);
+            int userId = 1;
+
+            //Act
+            var result = service.GetHistoryTransactions(userId);
+
+            //Assert 
+            Assert.Equal(3,result.Data.CountWins);
+            Assert.Equal(7, result.Data.CountGames);
+            Assert.Equal(2, result.Data.CountDraws);
+            Assert.Equal(400, result.Data.AmountWon);
+        }
+
+        private DbContextOptions<CasinoDbContext> GetContextWithData()
+        {
+            var options = new DbContextOptionsBuilder<CasinoDbContext>()
+                 .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
+            var context = new CasinoDbContext(options);
+            var user1 = new Users { Id = 1, Balance = 100, Email = "user1@user1.user1", Name = "User1", Password = "111" };
+            var user2 = new Users { Id = 2, Balance = 200, Email = "user2@user2.user2", Name = "User2", Password = "222" };
+
+            context.Users.Add(user1);
+
+            context.UserTransactions.Add(new UserTransactions { Type = DataContext.Enums.EnumTypeTransaction.Win, Amount = 100, UsersId = 1, User = user1 });
+            context.UserTransactions.Add(new UserTransactions { Type = DataContext.Enums.EnumTypeTransaction.Win, Amount = 200, UsersId = 1, User = user1 });
+            context.UserTransactions.Add(new UserTransactions { Type = DataContext.Enums.EnumTypeTransaction.Loss, Amount = 100, UsersId = 1, User = user1 });
+            context.UserTransactions.Add(new UserTransactions { Type = DataContext.Enums.EnumTypeTransaction.Win, Amount = 100, UsersId = 1, User = user1 });
+            context.UserTransactions.Add(new UserTransactions { Type = DataContext.Enums.EnumTypeTransaction.Loss, Amount = 200, UsersId = 1, User = user1 });
+            context.UserTransactions.Add(new UserTransactions { Type = DataContext.Enums.EnumTypeTransaction.Draw, Amount = 100, UsersId = 1, User = user1 });
+            context.UserTransactions.Add(new UserTransactions { Type = DataContext.Enums.EnumTypeTransaction.Draw, Amount = 100, UsersId = 1, User = user1 });
+            context.UserTransactions.Add(new UserTransactions { Type = DataContext.Enums.EnumTypeTransaction.Draw, Amount = 100, UsersId = 2 });
+            context.SaveChanges();
+            return options;
+
+
+
+
+
+
+
+
+        }
+
+    }
+}

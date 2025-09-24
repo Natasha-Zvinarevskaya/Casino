@@ -33,17 +33,17 @@ namespace Casino.Web.Controllers.WsControllers
         /// <returns>ид игры, статус игры (победа, проигрыш и т.д.), карты в руках дилера и игрока</returns>
         public BaseResponse<BlackJackGameModel> TurnPlayer(TurnPlayerRequest gameId)
         {
-            var response = _blackJackGameService.PlayerTurn(gameId.gameId);
+            var response = _blackJackGameService.PlayerTurn(gameId.gameId,User.UserId);
             return response;
         }
         /// <summary>
-        /// Пропусск хода игрока
+        /// Пропуск хода игрока
         /// </summary>
         /// <param name="gameId">ИД игры</param>
         /// <returns> ид игры, статус игры, карты в руках игроков</returns>
         public BaseResponse<BlackJackGameModel> SkipPlayer(TurnPlayerRequest gameId)
         {
-            var response = _blackJackGameService.SkipPlayer(gameId.gameId);
+            var response = _blackJackGameService.SkipPlayer(gameId.gameId, User.UserId);
             return response;
         }
     }

@@ -3,7 +3,9 @@ using Casino.DataContext;
 using Casino.DataContext.Enums;
 using Casino.Services.Interfaces;
 using Casino.Services.Models;
+using Casino.Services.Models.BlackjackGame.Response;
 using Casino.Services.Models.UserTransactionService.Request;
+using Casino.Services.Models.UserTransactionService.Response;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 using System;
@@ -17,10 +19,15 @@ namespace Casino.Services.Service
     public class UserTransactionService : IUserTransactionService
     {
         private DbContextOptions<CasinoDbContext> _options;
-        public UserTransactionService (DbContextOptions<CasinoDbContext> options)
+        public UserTransactionService(DbContextOptions<CasinoDbContext> options)
         {
             _options = options;
         }
+        /// <summary>
+        /// Транзакция при окончании игры
+        /// </summary>
+        /// <param name="gameId">Ид игры</param>
+        /// <exception cref="Exception"></exception>
         public void EndGameTransaction(int gameId)
         {
             var db = new CasinoDbContext(_options);
@@ -74,12 +81,12 @@ namespace Casino.Services.Service
             }
         }
 
-       /// <summary>
-       /// Пополнение баланса
-       /// </summary>
-       /// <param name="userId">ид пользователя</param>
-       /// <exception cref="Exception"></exception>
-           public void ReplenishmentBalance(TopUpBalanceRequest request )
+        /// <summary>
+        /// Пополнение баланса
+        /// </summary>
+        /// <param name="userId">ид пользователя</param>
+        /// <exception cref="Exception"></exception>
+        public void ReplenishmentBalance(TopUpBalanceRequest request)
         {
 
             ////Console.Clear();
@@ -127,21 +134,72 @@ namespace Casino.Services.Service
                     //            break;
 
 
-                //}
-                        db.UserTransactions.Add(transactionReplenishment);
-                db.SaveChanges();
-                transaction.Commit();
+                    //}
+                    db.UserTransactions.Add(transactionReplenishment);
+                    db.SaveChanges();
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                }
             }
-                    catch(Exception ex)
-                    {
-                transaction.Rollback();
+
+
+
+        }
+        /// <summary>
+        /// Метод получения истории пользователя кол-во сыгранных игр, победы/проигрыши/ничьи, кол-во денег
+        /// </summary>
+        /// <param name="userId"></param>
+        public BaseResponse<GetHistoryTransactionResponse> GetHistoryTransactions(int userId)
+        {
+            var db = new CasinoDbContext(_options);
+            var userTransactions = db.UserTransactions.Where(x => x.UsersId == userId).ToList();
+            if (userTransactions == null)
+                throw new Exception("Пользователь не найден.");
+
+            var countWins = 0;
+            var countLosses = 0;
+            var countDraws = 0;
+            var countGames = 0;
+            decimal amountLost = 0;
+            decimal amountWon = 0;
+
+
+            foreach (var userTransaction in userTransactions)
+            {
+                if (userTransaction.Type == EnumTypeTransaction.Win)
+                {
+                    countWins += 1;
+                    countGames += 1;
+                    amountWon += userTransaction.Amount;
+                }
+                if (userTransaction.Type == EnumTypeTransaction.Loss)
+                {
+                    countLosses += 1;
+                    countGames += 1;
+                    amountLost += userTransaction.Amount;
+                }
+                if (userTransaction.Type == EnumTypeTransaction.Draw)
+                {
+                    countDraws += 1;
+                    countGames += 1;
+                }
+
             }
+            var response = new GetHistoryTransactionResponse
+            {
+                CountWins = countWins,
+                CountLosses = countLosses,
+                CountDraws = countDraws,
+                CountGames = countGames,
+                AmountLost = amountLost,
+                AmountWon = amountWon
+            };
+            return new BaseResponse<GetHistoryTransactionResponse>(response);
         }
 
 
-
-    }
-        
-        
     }
 }

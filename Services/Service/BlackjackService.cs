@@ -10,10 +10,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Casino.Services.Models.BlackjackGame.Response;
 using Casino.Services.Enums.BlackjackGame;
+using Casino.DataContext;
 
 namespace Casino.Services.Service
 {
-    public class BlackjackService:IBlackJackGameService
+    public class BlackjackService : IBlackJackGameService
     {
         private IPlayerGameService _playerGameService;
         public BlackjackService(IPlayerGameService playerGameService)
@@ -21,41 +22,42 @@ namespace Casino.Services.Service
             _playerGameService = playerGameService;
 
         }
-        /// <summary>
-        /// Колода
-        /// </summary>
-        private Deck _deck = new Deck();
-        /// <summary>
-        /// Рука игрока
-        /// </summary>
-        private List<Card> _playerHand = new List<Card>();
-        /// <summary>
-        /// Рука дилера
-        /// </summary>
-        private List<Card> _dealerHand = new List<Card>();
-        /// <summary>
-        /// Счет
-        /// </summary>
-        private int _playerScore = 0;
-        private int _dealerScore = 0;
+
         /// <summary>
         /// Старт игры при нажатии кнопки на сайте 
         /// </summary>
         /// <param name="request">Сумма ставки , выбранная пользователем</param>
         /// <param name="userId">пользователь</param>
         /// <returns></returns>
-        public BaseResponse<BlackJackGameModel> Play(BlackjackPlayRequest request,int userId)
+        public BaseResponse<BlackJackGameModel> Play(BlackjackPlayRequest request, int userId)
         {
+            /// <summary>
+            /// Колода
+            /// </summary>
+            Deck _deck = new Deck();
+            /// <summary>
+            /// Рука игрока
+            /// </summary>
+            List<Card> _playerHand = new List<Card>();
+            /// <summary>
+            /// Рука дилера
+            /// </summary>
+            List<Card> _dealerHand = new List<Card>();
+            /// <summary>
+            /// Счет
+            /// </summary>
+            int _playerScore = 0;
+            int _dealerScore = 0;
+
             var startRequest = new StartGameRequest
             {
                 Bet = request.Bet,
                 UserId = userId,
                 Game = 1
             };
-            var gameId=_playerGameService.StartGame(startRequest);
+            var gameId = _playerGameService.StartGame(startRequest);
             List<Card> gameDeck = _deck.Shuffle();
-            _playerHand.Clear();
-            _dealerHand.Clear();
+
             _playerHand.Add(_deck.DealCard());
             _playerHand.Add(_deck.DealCard());
 
@@ -98,7 +100,7 @@ namespace Casino.Services.Service
                 return new BaseResponse<BlackJackGameModel>(blackjackGameModel);
             }
             //Сделать проверку на выигрыш. (10+11=21). Отправить измененный статус игры (победа/проигрыш)
-            
+
         }
         /// <summary>
         /// Сумма очков у заданной руки 
@@ -123,8 +125,21 @@ namespace Casino.Services.Service
             }
             return score;
         }
-        public BaseResponse<BlackJackGameModel> PlayerTurn(int gameId)
+        public BaseResponse<BlackJackGameModel> PlayerTurn(int gameId, int userId)
         {
+            int _playerScore;
+            var gameHistory = _playerGameService.GetHistory(gameId, userId);
+            /// <summary>
+            /// Колода
+            /// </summary>
+            Deck _deck = new Deck();
+             _deck.HistoryDeck(gameHistory.CardsHistory.Deck);
+            /// <summary>
+            /// Рука игрока
+            /// </summary>
+            List<Card> _playerHand = gameHistory.CardsHistory.PlayerHand;
+            List<Card> _dealerHand = gameHistory.CardsHistory.DealerHand;
+            
 
             _playerHand.Add(_deck.DealCard());
             _playerScore = GetHandScore(_playerHand);
@@ -146,23 +161,34 @@ namespace Casino.Services.Service
             //{
 
 
-                var cardsDeck = _deck.GetCards();
-                var saveGameHistoryRequest = new SaveGameHistoryRequest { Deck = cardsDeck, PlayerHand = _playerHand, DealerHand = _dealerHand, GameId = gameId };
-                _playerGameService.SaveGameHistory(saveGameHistoryRequest);
-                var blackjackGameModel = new BlackJackGameModel { GameId = gameId, Status = EnumStatusGame.None, PLayerCards = _playerHand, DealerCards = _dealerHand };
-                return new BaseResponse<BlackJackGameModel>(blackjackGameModel);
-           // }
+            var cardsDeck = _deck.GetCards();
+            var saveGameHistoryRequest = new SaveGameHistoryRequest { Deck = cardsDeck, PlayerHand = _playerHand, DealerHand = _dealerHand, GameId = gameId };
+            _playerGameService.SaveGameHistory(saveGameHistoryRequest);
+            var blackjackGameModel = new BlackJackGameModel { GameId = gameId, Status = EnumStatusGame.None, PLayerCards = _playerHand, DealerCards = _dealerHand };
+            return new BaseResponse<BlackJackGameModel>(blackjackGameModel);
+            // }
         }
-        public BaseResponse<BlackJackGameModel> SkipPlayer (int gameId)
+        public BaseResponse<BlackJackGameModel> SkipPlayer(int gameId,int userId)
         {
+            int _playerScore;
+            int _dealerScore; 
+            var gameHistory = _playerGameService.GetHistory(gameId, userId);
+            Deck _deck = new Deck();
+            _deck.HistoryDeck(gameHistory.CardsHistory.Deck);
+            List<Card> _playerHand = gameHistory.CardsHistory.PlayerHand;
+            List<Card> _dealerHand = gameHistory.CardsHistory.DealerHand;
             while (GetHandScore(_dealerHand) < 17)
             {
                 _dealerHand.Add(_deck.DealCard());
             }
             _playerScore = GetHandScore(_playerHand);
             _dealerScore = GetHandScore(_dealerHand);
+            var cardsDeck = _deck.GetCards();
+            var saveGameHistoryRequest = new SaveGameHistoryRequest { Deck = cardsDeck, PlayerHand = _playerHand, DealerHand = _dealerHand, GameId = gameId };
+            _playerGameService.SaveGameHistory(saveGameHistoryRequest);
+            var request = new DetermineWinnerRequest { GameId = gameId, UserId = userId, PlayerScore = _playerScore, DealerScore = _dealerScore };
 
-            var blackJackGameModel = DetermineWinner(gameId);
+            var blackJackGameModel = DetermineWinner(request);
             return new BaseResponse<BlackJackGameModel>(blackJackGameModel.Data);
         }
         /// <summary>
@@ -170,35 +196,39 @@ namespace Casino.Services.Service
         /// </summary>
         /// <param name="gameId">ИД игры</param>
         /// <returns>модель блэкджека с инфо о статусе игры и картах на руках для фронта</returns>
-        private BaseResponse<BlackJackGameModel> DetermineWinner(int gameId)
+        private BaseResponse<BlackJackGameModel> DetermineWinner(DetermineWinnerRequest request)
         {
-            var request = new EndGameRequest() { GameId = gameId };
-            if (_playerScore == _dealerScore || _dealerScore > 21 && _playerScore > 21)
+            var gameHistory = _playerGameService.GetHistory(request.GameId, request.UserId);
+            var _playerHand = gameHistory.CardsHistory.PlayerHand;
+            var _dealerHand = gameHistory.CardsHistory.DealerHand;
+
+            var response = new EndGameRequest() { GameId = request.GameId};
+            if (request.PlayerScore == request.DealerScore || request.DealerScore > 21 && request.PlayerScore > 21)
             {
 
-               // Console.WriteLine("Ничья!");
-                request.ResultGame = EnumStatusGame.Draw;
-                _playerGameService.EndGame(request);
-                var blackjackGameModel = new BlackJackGameModel { GameId = gameId, Status = EnumStatusGame.Draw, PLayerCards = _playerHand, DealerCards = _dealerHand };
+                // Console.WriteLine("Ничья!");
+                response.ResultGame = EnumStatusGame.Draw;
+                _playerGameService.EndGame(response);
+                var blackjackGameModel = new BlackJackGameModel { GameId = request.GameId, Status = EnumStatusGame.Draw, PLayerCards = _playerHand, DealerCards = _dealerHand };
                 return new BaseResponse<BlackJackGameModel>(blackjackGameModel);
 
             }
             else
-            if (_dealerScore > _playerScore && _dealerScore <= 21 || _playerScore > 21)
+            if (request.DealerScore > request.PlayerScore && request.DealerScore <= 21 || request.PlayerScore> 21)
             {
-               // Console.WriteLine("Дилер победил!");
-                request.ResultGame = EnumStatusGame.Loss;
-                _playerGameService.EndGame(request);
-                var blackjackGameModel = new BlackJackGameModel { GameId = gameId, Status = EnumStatusGame.Loss, PLayerCards = _playerHand, DealerCards = _dealerHand };
+                // Console.WriteLine("Дилер победил!");
+                    response.ResultGame = EnumStatusGame.Loss;
+                _playerGameService.EndGame(response);
+                var blackjackGameModel = new BlackJackGameModel { GameId = request.GameId, Status = EnumStatusGame.Loss, PLayerCards = _playerHand, DealerCards = _dealerHand };
                 return new BaseResponse<BlackJackGameModel>(blackjackGameModel);
             }
             else
 
             {
-               // Console.WriteLine("Игрок победил!");
-                request.ResultGame = EnumStatusGame.Win;
-               _playerGameService.EndGame(request);
-                var blackjackGameModel = new BlackJackGameModel { GameId = gameId, Status = EnumStatusGame.Win, PLayerCards = _playerHand, DealerCards = _dealerHand };
+                // Console.WriteLine("Игрок победил!");
+                response.ResultGame = EnumStatusGame.Win;
+                _playerGameService.EndGame(response);
+                var blackjackGameModel = new BlackJackGameModel { GameId = request.GameId, Status = EnumStatusGame.Win, PLayerCards = _playerHand, DealerCards = _dealerHand };
                 return new BaseResponse<BlackJackGameModel>(blackjackGameModel);
             }
 

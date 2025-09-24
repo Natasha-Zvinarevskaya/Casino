@@ -53,9 +53,21 @@ namespace Casino.Services.Models.BlackjackGame
             return card;
 
         }
+        /// <summary>
+        /// Вернуть колоду
+        /// </summary>
+        /// <returns></returns>
         public List<Card> GetCards ()
         {
             return _cards;
+        }
+        /// <summary>
+        /// Колода взятая из истории игры 
+        /// </summary>
+        /// <param name="cards"></param>
+        public void HistoryDeck(List<Card> cards)
+        {
+            _cards = cards;
         }
     }
 }
