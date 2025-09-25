@@ -15,6 +15,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using System.Drawing;
+using System.Reflection;
 
 namespace Casino.Services.Service
 {
@@ -109,31 +110,63 @@ namespace Casino.Services.Service
                 throw new Exception("Пользователь не найден.");
             var historyTransactions = _userTransactionService.GetHistoryTransactions(userId);
             var response = new ShowUserDataResponse { Email = user.Email, Name = user.Name, Balance = user.Balance, HistoryTransaction = historyTransactions.Data };
+            if (File.Exists($"\\Image\\Users\\{userId}.png"))
+            {
+                string image = Convert.ToBase64String(File.ReadAllBytes($"\\Image\\Users\\{userId}.png"));
 
-            string image = Convert.ToBase64String(File.ReadAllBytes("D:\\Натаха\\Животные\\1q6wYwNCS-I.jpg"));
+            }
+            else
+            {
+                string image = null;
 
-            string base64String = "";
-            byte[] bytes = Convert.FromBase64String(base64String);
-            string filePath = "Your\\Server\\Path\\Image.png"; // Adjust the path and file name
+            }
 
-            File.WriteAllBytes(filePath, bytes);
- 
+            ////преобразование изображения в битовый массив,а затем запись в файл
+            //            string base64String = "";
+            //            byte[] bytes = Convert.FromBase64String(base64String);
+            //            string filePath = $"D:\\Натаха\\Casino\\Services\\Image\\Users\\{userId}.png"; 
 
-     
+            //            File.WriteAllBytes(filePath, bytes);
+
 
             return new BaseResponse<ShowUserDataResponse>(response);
         }
+      
 
-
-        public void ChangeUserName(ChangeUserNameRequest request)
+        /// <summary>
+        /// Изменить имя пользователя
+        /// </summary>
+        /// <param name="request">Ид пользователя, новое имя</param>
+        /// <exception cref="Exception"></exception>
+        public BaseResponse ChangeUserName(BaseUserIdReq<ChangeUserNameRequest> request)
         {
             var db = new CasinoDbContext(_options);
             var user = db.Users.FirstOrDefault(x => x.Id == request.UserId);
             if (user == null)
                 throw new Exception("Пользователь не найден.");
-            user.Name = request.Name;
+            user.Name = request.Request.Name;
             db.SaveChanges();
 
+            return new BaseResponse();
+            
+
+        }
+        /// <summary>
+        /// Сохранить изображение пользователя (если картинка уже была и нужно изменить, тогда файл перезаписывается)
+        /// </summary>
+        /// <param name="request">Ид пользователя, закодированная строка изображения</param>
+        public BaseResponse SaveUserImage (BaseUserIdReq< SaveUserImageRequest> request)
+        {
+
+            //преобразование изображения в битовый массив,а затем запись в файл
+            
+            byte[] bytes = Convert.FromBase64String(request.Request.Image);
+            string filePath = @$"D:,,,\\Image\Users\\{request.UserId}.png";
+            var appDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            var fullPath = Path.Combine(appDir, filePath);
+
+            File.WriteAllBytes(fullPath, bytes);
+            return new BaseResponse();
         }
     }
 }

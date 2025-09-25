@@ -9,4 +9,8 @@
     <ProjectReference Include="..\Casino.DataContext\Casino.DataContext.csproj" />
   </ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Image\Users\" />
+	</ItemGroup>
+
 </Project>
