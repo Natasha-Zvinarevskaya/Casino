@@ -11,6 +11,8 @@ using Casino.Services.Models;
 using Casino.Services.Models.BlackjackGame.Response;
 using Casino.Services.Models.UserTransactionService.Response;
 using Microsoft.Extensions.DependencyInjection;
+using Casino.Services.Request.GoogleAuth;
+using Microsoft.Extensions.Options;
 
 namespace Casino.Test
 {
@@ -142,7 +144,7 @@ namespace Casino.Test
             var service = serviceProvider.GetService<IUserService>();
 
 
-          
+
             ChangeUserNameRequest request1 = new ChangeUserNameRequest { UserId = 1, Name = "Tom" };
             BaseUserIdReq<ChangeUserNameRequest> request = new BaseUserIdReq<ChangeUserNameRequest>(1, request1);
 
@@ -158,5 +160,20 @@ namespace Casino.Test
             Assert.Equal("Tom", result2.Data.Name);
         }
 
+        [Fact]
+        public void GoogleService_GetAuthUrl_resultNotNull()
+        {
+            //Arange
+            var serviceProvider = ServerProviderTests.GetServerProvider();
+            var service = serviceProvider.GetService<IGoogleService>();
+
+            GetAuthUrlRequest request = new GetAuthUrlRequest { ProviderType = 111, RedirectUrl = "http://localhost:5179/Blackjack", Action = 222, AuthToken = 333 };
+
+            //Act
+            var result = service.GoogleProvider(request);
+
+            //Assert
+            Assert.NotNull(result);
+        }
     }
 }

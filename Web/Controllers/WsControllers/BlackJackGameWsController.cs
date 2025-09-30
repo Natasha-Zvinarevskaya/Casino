@@ -6,10 +6,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Casino.Web.Controllers.WsControllers
 
-{    public class BlackJackGameController : WsController
+{    public class BlackJackGameWsController : WsController
     {
         private IBlackJackGameService _blackJackGameService;
-        public BlackJackGameController(IBlackJackGameService blackJackGameService)
+        public BlackJackGameWsController(IBlackJackGameService blackJackGameService)
         {
             _blackJackGameService = blackJackGameService;
         }

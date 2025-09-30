@@ -1,5 +1,6 @@
 ﻿using Casino.DataContext;
 using Casino.Services.Interfaces;
+using Casino.Services.Request.GoogleAuth;
 using Casino.Services.Service;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -25,10 +26,25 @@ namespace Casino.Test
             services.AddScoped<IBlackJackGameService, BlackjackService>();
             services.AddScoped<IPlayerGameService, PlayerGameService>();
             services.AddScoped<IUserTransactionService, UserTransactionService>();
+            services.AddScoped<IGoogleService, GoogleServices>();
+
+
+            //IConfiguration AppConfiguration;
+           
+            services.Configure<OptionGoogleSettings>(opt =>
+            {
+                opt.ClientId = "411996394677-cvua557j7cm6keqpk0sao5is1g42s7aq.apps.googleusercontent.com";
+            });
+
+           // services.Configure<OptionGoogleSettings>(services.Configuration.GetSection(nameof(OptionGoogleSettings)));
+            //services.AddCors();
+
 
             var serviceProvider = services.BuildServiceProvider();
             var options = serviceProvider.GetService<DbContextOptions<CasinoDbContext>>();
             var context = new CasinoDbContext(options);
+
+
 
             var user1 = new Users { Id = 1, Balance = 100, Email = "user1@user1.user1", Name = "User1", Password = "111" };
             var user2 = new Users { Id = 2, Balance = 200, Email = "user2@user2.user2", Name = "User2", Password = "222" };

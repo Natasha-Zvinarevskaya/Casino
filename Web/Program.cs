@@ -13,6 +13,10 @@ using Microsoft.AspNetCore.Authentication;
 using Azure.Core;
 using Microsoft.IdentityModel.Tokens;
 using Casino.Services.Models.UserSessionServiceModel.Response;
+using System;
+using Casino.Services.Request.GoogleAuth;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Configuration;
 
 namespace Web
 {
@@ -31,6 +35,11 @@ namespace Web
             builder.Services.AddScoped<IBlackJackGameService, BlackjackService>();
             builder.Services.AddScoped<IPlayerGameService, PlayerGameService>();
             builder.Services.AddScoped<IUserTransactionService, UserTransactionService>();
+            builder.Services.AddScoped<IGoogleService, GoogleServices>();
+
+            // builder.Services.Configure<OptionGoogleSettings>(builder.Configuration);
+            builder.Services.Configure<OptionGoogleSettings>(builder.Configuration.GetSection(nameof(OptionGoogleSettings)));
+            builder.Services.AddCors();
 
 
 
@@ -40,8 +49,7 @@ namespace Web
             builder.Services.AddAuthorization(); //Сервисы авторизации
             builder.Services.AddSession(); //Сервисы для сессии
 
-
-            builder.Services.AddCors();
+            
 
             var app = builder.Build();
 
@@ -68,6 +76,8 @@ namespace Web
 
             //Подключение сервисов,чтобы передать значение переменной
             var serviceProvider = builder.Services.BuildServiceProvider();
+
+          
 
             // Для вебСокета
             app.Map("/ws", async context =>
