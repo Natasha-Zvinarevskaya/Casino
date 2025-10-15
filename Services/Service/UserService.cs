@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 
 using System.Drawing;
 using System.Reflection;
+using Casino.Services.Request.GoogleAuth;
 
 namespace Casino.Services.Service
 {
@@ -168,5 +169,8 @@ namespace Casino.Services.Service
             File.WriteAllBytes(fullPath, bytes);
             return new BaseResponse();
         }
+       
+
+
     }
 }

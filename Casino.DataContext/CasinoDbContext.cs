@@ -25,6 +25,7 @@ namespace Casino.DataContext
         public DbSet<UserTransactions> UserTransactions { get; set; }
         public DbSet<UserSession> UserSessions { get; set; }
         public DbSet<GameHistory> GameHistory { get; set; }
+        public DbSet<UserProvider> UserProviders { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -33,6 +34,7 @@ namespace Casino.DataContext
             modelBuilder.Entity<PlayerGame>().HasOne(x => x.GameSettings).WithOne(x => x.PlayerGame).HasForeignKey<GameSettings>(x => x.PlayerGameId);
             modelBuilder.Entity<UserSession>().HasOne(x => x.User).WithMany(x => x.UserSessions).HasForeignKey(x => x.UserId);
             modelBuilder.Entity<PlayerGame>().HasOne(x => x.GameHistory).WithOne(x => x.PlayerGame).HasForeignKey<GameHistory>(x=>x.PlayerGameId);
+            modelBuilder.Entity<UserProvider>().HasOne(x => x.User).WithOne(x => x.UserProvider).HasForeignKey<UserProvider>(x => x.UserId);
 
         }
 

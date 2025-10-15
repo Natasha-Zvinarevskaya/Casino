@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,6 +31,7 @@ namespace Casino.DataContext
         /// <summary>
         /// Баланс
         /// </summary>
+        [Column(TypeName = "decimal(18,2)")]
         public decimal Balance { get; set; }
 
 
@@ -37,5 +39,7 @@ namespace Casino.DataContext
 
         public List<UserTransactions> Transactions { get; set; }
         public List<UserSession> UserSessions { get; set; }
+
+        public UserProvider UserProvider { get; set; }
     }
 }

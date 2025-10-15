@@ -13,6 +13,7 @@ using Casino.Services.Models.UserTransactionService.Response;
 using Microsoft.Extensions.DependencyInjection;
 using Casino.Services.Request.GoogleAuth;
 using Microsoft.Extensions.Options;
+using System;
 
 namespace Casino.Test
 {
@@ -89,6 +90,7 @@ namespace Casino.Test
             var user2 = new Users { Id = 2, Balance = 200, Email = "user2@user2.user2", Name = "User2", Password = "222" };
 
             context.Users.Add(user1);
+            context.Users.Add(user2);
 
             context.UserTransactions.Add(new UserTransactions { Type = DataContext.Enums.EnumTypeTransaction.Win, Amount = 100, UsersId = 1, User = user1 });
             context.UserTransactions.Add(new UserTransactions { Type = DataContext.Enums.EnumTypeTransaction.Win, Amount = 200, UsersId = 1, User = user1 });
@@ -98,6 +100,8 @@ namespace Casino.Test
             context.UserTransactions.Add(new UserTransactions { Type = DataContext.Enums.EnumTypeTransaction.Draw, Amount = 100, UsersId = 1, User = user1 });
             context.UserTransactions.Add(new UserTransactions { Type = DataContext.Enums.EnumTypeTransaction.Draw, Amount = 100, UsersId = 1, User = user1 });
             context.UserTransactions.Add(new UserTransactions { Type = DataContext.Enums.EnumTypeTransaction.Draw, Amount = 100, UsersId = 2 });
+
+
             context.SaveChanges();
             return options;
         }
@@ -167,13 +171,83 @@ namespace Casino.Test
             var serviceProvider = ServerProviderTests.GetServerProvider();
             var service = serviceProvider.GetService<IGoogleService>();
 
-            GetAuthUrlRequest request = new GetAuthUrlRequest { ProviderType = 111, RedirectUrl = "http://localhost:5179/Blackjack", Action = 222, AuthToken = 333 };
+            GetAuthUrlRequest request = new GetAuthUrlRequest { ProviderType = 111, RedirectUrl = "http://localhost:5179/GoogleAuth/CallBack", Action = 222, AuthToken = 333 };
 
             //Act
             var result = service.GoogleProvider(request);
 
             //Assert
             Assert.NotNull(result);
+
+        }
+
+        [Fact]
+        public async Task GoogleService_GetTokenGoogle_resultNotNull()
+        {
+            //Arange
+            var serviceProvider = ServerProviderTests.GetServerProvider();
+            var service = serviceProvider.GetService<IGoogleService>();
+            CallbackGoogleRequest request = new CallbackGoogleRequest { Code = "c" };
+
+            //Act
+            
+           var result = await service.GetTokenGoogle(request);
+
+            //Assert
+            Assert.NotNull(result);
+        }
+
+        [Fact]
+        public void GoogleService_GetEmail_result()
+        {
+            //Arange
+            var serviceProvider = ServerProviderTests.GetServerProvider();
+            var service = serviceProvider.GetService<IGoogleService>();
+            ResponseGetToken request = new ResponseGetToken
+            {
+                access_token = "at",
+                expires_in = 3599,
+                id_token = "t",
+                refresh_token = "k",
+                scope = "openid ",
+                token_type = "Bearer"
+            };
+
+            //Act
+            var result = service.GetEmail(request.id_token);
+
+            //Assert
+            Assert.NotNull(result);
+        }
+        [Fact]
+        public void GoogleService_GoogleRegister_IsSucsses()
+        {
+            //Arange
+            var serviceProvider = ServerProviderTests.GetServerProvider();
+            var service = serviceProvider.GetService<IGoogleService>();
+            var contextOptions = GetContextWithData();
+            GoogleRegisterRequest request = new GoogleRegisterRequest { Email = "ex@gmail.com", Name = "Exx", Token = "k" };
+
+            //Act
+            var result = service.GoogleRegister(request);
+
+            //Assert
+            Assert.Equal(true, result.IsSucces);
+        }
+        [Fact]
+        public void GoogleService_GoogleLogin_NotNull()
+        {
+            //Arange
+            var serviceProvider = ServerProviderTests.GetServerProvider();
+            var service = serviceProvider.GetService<IGoogleService>();
+
+            var request = new GoogleLoginRequest { Email = "user1@user1.user1",  Token = "k" };
+
+            //Act
+            var result = service.GoogleLogin(request);
+
+            //Assert
+            Assert.NotNull(result.Data);
         }
     }
 }

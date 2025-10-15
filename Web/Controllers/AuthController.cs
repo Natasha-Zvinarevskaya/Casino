@@ -38,8 +38,6 @@ namespace Casino.Web.Controllers
                 var loginResponse = _userService.Login(user);
                 if (loginResponse.IsSucces)
                 {
-                    //Request.HttpContext.Session.SetString("Auth-Token", loginResponse.Data.Token.ToString());
-                    //context.Response.Cookies.Append("name", "Tom");
 
                     Request.HttpContext.Response.Cookies.Append("Auth-Token", loginResponse.Data.Token.ToString());
 

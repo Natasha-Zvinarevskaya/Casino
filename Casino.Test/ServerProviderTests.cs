@@ -59,6 +59,8 @@ namespace Casino.Test
             context.UserTransactions.Add(new UserTransactions { Type = DataContext.Enums.EnumTypeTransaction.Draw, Amount = 100, UsersId = 1, User = user1 });
             context.UserTransactions.Add(new UserTransactions { Type = DataContext.Enums.EnumTypeTransaction.Draw, Amount = 100, UsersId = 1, User = user1 });
             context.UserTransactions.Add(new UserTransactions { Type = DataContext.Enums.EnumTypeTransaction.Draw, Amount = 100, UsersId = 2 });
+            context.UserProviders.Add(new UserProvider { Id = 1, ProviderType = DataContext.Enums.EnumProviderType.Google, User = user1, UserId = 1, Token =  "k" });
+
             context.SaveChanges();
             return serviceProvider;
         }

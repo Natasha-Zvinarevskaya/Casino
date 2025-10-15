@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace Casino.Services.Request.GoogleAuth
 {
-  public  class GetAuthUrlRequest
+    public class GetAuthUrlRequest
     {
         public int ProviderType { get; set; } //EnumProviderType
         public string RedirectUrl { get; set; } //Ссылка на которую будет направлен пользователь после авторизации
-      public int Action { get; set; } //EnumActionType (Перечисление действий пользователя.Авторизация/Регистрация/Привязка аккаунта
+        public int Action { get; set; } //EnumActionType (Перечисление действий пользователя.Авторизация/Регистрация/Привязка аккаунта
         public int AuthToken { get; set; } //Токен авторизации 
     }
 }
