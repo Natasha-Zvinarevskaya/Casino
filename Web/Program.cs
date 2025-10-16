@@ -136,7 +136,7 @@ namespace Web
             // Нужно, чтобы обычные контроллеры работали через HTTP (если нужно)
             app.MapControllers();
 
-
+            app.UseMiddleware<Middleware>();
 
             app.MapControllerRoute(
                 name: "default",

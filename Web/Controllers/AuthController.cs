@@ -2,6 +2,8 @@
 using Casino.Services.Models;
 using Casino.Services.Models.BlackjackGame.Response;
 using Casino.Services.Request.Users;
+using Casino.Services.Service;
+using Google.Apis.Drive.v3.Data;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using LoginRequest = Casino.Services.Request.Users.LoginRequest;
@@ -33,6 +35,7 @@ namespace Casino.Web.Controllers
         [Route("Login")]
         public IActionResult Login (LoginRequest user)
         {
+           
             if (ModelState.IsValid)
             {
                 var loginResponse = _userService.Login(user);
@@ -40,11 +43,14 @@ namespace Casino.Web.Controllers
                 {
 
                     Request.HttpContext.Response.Cookies.Append("Auth-Token", loginResponse.Data.Token.ToString());
+                  
 
                     return Json(new BaseResponse());
                 }
 
             }
+        
+
             return Json(new BaseResponse("Ошибка."));
 
         }

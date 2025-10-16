@@ -13,6 +13,7 @@ namespace Casino.Services.Request.Users
         public string Email { get; set; }
         [JsonPropertyName("password")]
         public string Password { get; set; }
+       
     }
     
 }

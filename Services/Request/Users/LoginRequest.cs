@@ -8,8 +8,9 @@ namespace Casino.Services.Request.Users
 {
     public class LoginRequest
     {
-
+        
         public string Email { get; set; }
+        //Password
         public string Password { get; set; }
     }
 }

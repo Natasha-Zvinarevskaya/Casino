@@ -88,10 +88,6 @@ namespace Casino.Services.Service
         /// <exception cref="Exception"></exception>
         public void ReplenishmentBalance(TopUpBalanceRequest request)
         {
-
-            ////Console.Clear();
-            ////Console.WriteLine("Выберите сумму пополнения баланса: \n1. 10 монет.\n2.30 монет.\n3.50 монет. ");
-            ////var userAnswer = Console.ReadLine();
             var db = new CasinoDbContext(_options);
             var user = db.Users.FirstOrDefault(x => x.Id == request.UserId);
             if (user == null)
@@ -112,29 +108,6 @@ namespace Casino.Services.Service
                 {
                     user.Balance += request.Count;
 
-                    //    switch (userAnswer)
-                    //    {
-                    //        case "1":
-
-                    //            transactionReplenisment.Amount = 10;
-                    //            user.Balance += 10;
-                    //            break;
-                    //        case "2":
-                    //            transactionReplenisment.Amount = 30;
-                    //            user.Balance += 30;
-
-                    //            break;
-                    //        case "3":
-                    //            transactionReplenisment.Amount = 50;
-                    //            user.Balance += 50;
-
-                    //            break;
-                    //        default:
-                    //            Console.WriteLine("Неверно выбрана сумма.");
-                    //            break;
-
-
-                    //}
                     db.UserTransactions.Add(transactionReplenishment);
                     db.SaveChanges();
                     transaction.Commit();

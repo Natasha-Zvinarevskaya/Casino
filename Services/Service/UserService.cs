@@ -57,7 +57,7 @@ namespace Casino.Services.Service
         /// </summary>
         /// <param name="input">Строка вводимая пользователем</param>
         /// <returns>Хэшированная строка</returns>
-        public static string CreateSHA256(string input)
+        private static string CreateSHA256(string input)
         {
             using SHA256 hash = SHA256.Create();
             return Convert.ToHexString(hash.ComputeHash(Encoding.UTF8.GetBytes(input)));
@@ -121,14 +121,6 @@ namespace Casino.Services.Service
                 string image = null;
 
             }
-
-            ////преобразование изображения в битовый массив,а затем запись в файл
-            //            string base64String = "";
-            //            byte[] bytes = Convert.FromBase64String(base64String);
-            //            string filePath = $"D:\\Натаха\\Casino\\Services\\Image\\Users\\{userId}.png"; 
-
-            //            File.WriteAllBytes(filePath, bytes);
-
 
             return new BaseResponse<ShowUserDataResponse>(response);
         }

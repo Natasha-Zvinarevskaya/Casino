@@ -42,7 +42,7 @@ namespace Casino.Services.Service
         public string GoogleProvider(GetAuthUrlRequest request)
         {
             string redirectUri = $"https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id={_options.ClientId}&redirect_uri={request.RedirectUrl}&scope=openid%20email%20profile&access_type=offline&prompt=consent&state={request.AuthToken},{request.ProviderType},{request.Action}&include_granted_scopes=true";
-            // var redirectUri=HttpUtility.UrlEncode(uri);
+           
             return redirectUri;
         }
         /// <summary>
@@ -58,10 +58,6 @@ namespace Casino.Services.Service
             using var json = await httpClient.PostAsync("https://oauth2.googleapis.com/token", content);
             var response = await json.Content.ReadFromJsonAsync<ResponseGetToken>();
 
-
-
-
-            //return redirectUri;
             return response.id_token;
         }
         /// <summary>
@@ -128,7 +124,6 @@ namespace Casino.Services.Service
 
             }
 
-            user.Password = CreateSHA256(request.RefreshToken);
 
             var userProvider = db.UserProviders.FirstOrDefault(x => x.UserId == user.Id);
             if (userProvider == null)
@@ -145,7 +140,7 @@ namespace Casino.Services.Service
         /// </summary>
         /// <param name="request">Мэил,имя,токен</param>
         /// <returns></returns>
-        public BaseResponse GoogleRegister(GoogleRegisterRequest request)
+        public new BaseResponse GoogleRegister(GoogleRegisterRequest request)
         {
             using var db = new CasinoDbContext(_optionsDb);
             
@@ -153,7 +148,7 @@ namespace Casino.Services.Service
             db.Users.Add(new Users
             {
                 Email = request.Email,
-                Name = request.Name,
+              
              
             });
             db.UserProviders.Add(new UserProvider
@@ -203,17 +198,6 @@ namespace Casino.Services.Service
             };
             return new BaseResponse<UserSessionModel>(response);
         }
-        /// <summary>
-        /// Хэширование пароля
-        /// </summary>
-        /// <param name="input"></param>
-        /// <returns></returns>
-        public static string CreateSHA256(string input)
-        {
-            using SHA256 hash = SHA256.Create();
-            return Convert.ToHexString(hash.ComputeHash(Encoding.UTF8.GetBytes(input)));
-        }
-
-
+    
     }
 }

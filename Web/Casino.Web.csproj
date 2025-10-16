@@ -20,6 +20,7 @@
     <PackageReference Include="Google.Apis.Auth" Version="1.71.0" />
     <PackageReference Include="Google.Apis.Auth.AspNetCore3" Version="1.71.0" />
     <PackageReference Include="Google.Apis.Drive.v3" Version="1.71.0.3905" />
+    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.18">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

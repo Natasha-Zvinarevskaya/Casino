@@ -34,6 +34,7 @@ namespace Casino.Services.Service
             /// <summary>
             /// Колода
             /// </summary>
+            //Абстракция
             Deck _deck = new Deck();
             /// <summary>
             /// Рука игрока
@@ -99,7 +100,7 @@ namespace Casino.Services.Service
                 var blackjackGameModel = new BlackJackGameModel { GameId = gameId, Status = EnumStatusGame.None, PLayerCards = _playerHand, DealerCards = _dealerHand };
                 return new BaseResponse<BlackJackGameModel>(blackjackGameModel);
             }
-            //Сделать проверку на выигрыш. (10+11=21). Отправить измененный статус игры (победа/проигрыш)
+
 
         }
         /// <summary>
@@ -107,6 +108,7 @@ namespace Casino.Services.Service
         /// </summary>
         /// <param name="cards">Карты в руке</param>
         /// <returns>Счет</returns>
+        //Инкапсуляция
         private int GetHandScore(List<Card> cards)
         {
             int score = 0;
@@ -125,7 +127,14 @@ namespace Casino.Services.Service
             }
             return score;
         }
-        public BaseResponse<BlackJackGameModel> PlayerTurn(int gameId, int userId)
+        /// <summary>
+        /// Ход игрока
+        /// </summary>
+        /// <param name="gameId"></param>
+        /// <param name="userId"></param>
+        /// <returns></returns> 
+        //Полиморфизм
+        public BaseResponse<BlackJackGameModel> Turn(int gameId, int userId)
         {
             int _playerScore;
             var gameHistory = _playerGameService.GetHistory(gameId, userId);
@@ -133,63 +142,73 @@ namespace Casino.Services.Service
             /// Колода
             /// </summary>
             Deck _deck = new Deck();
-             _deck.HistoryDeck(gameHistory.CardsHistory.Deck);
+            _deck.HistoryDeck(gameHistory.CardsHistory.Deck);
             /// <summary>
             /// Рука игрока
             /// </summary>
             List<Card> _playerHand = gameHistory.CardsHistory.PlayerHand;
             List<Card> _dealerHand = gameHistory.CardsHistory.DealerHand;
-            
+
 
             _playerHand.Add(_deck.DealCard());
             _playerScore = GetHandScore(_playerHand);
-
-
-            //if (_playerScore == 21)
-            //{
-
-            //    var blackjackGameModel = new BlackJackGameModel { GameId = gameId, Status = EnumStatusGame.Win, PLayerCards = _playerHand, DealerCards = _dealerHand };
-            //    return new BaseResponse<BlackJackGameModel>(blackjackGameModel);
-            //}
-            //else
-            //    if (_playerScore > 21)
-            //{
-            //    var blackjackGameModel = new BlackJackGameModel { GameId = gameId, Status = EnumStatusGame.Loss, PLayerCards = _playerHand, DealerCards = _dealerHand };
-            //    return new BaseResponse<BlackJackGameModel>(blackjackGameModel);
-            //}
-            //else
-            //{
-
 
             var cardsDeck = _deck.GetCards();
             var saveGameHistoryRequest = new SaveGameHistoryRequest { Deck = cardsDeck, PlayerHand = _playerHand, DealerHand = _dealerHand, GameId = gameId };
             _playerGameService.SaveGameHistory(saveGameHistoryRequest);
             var blackjackGameModel = new BlackJackGameModel { GameId = gameId, Status = EnumStatusGame.None, PLayerCards = _playerHand, DealerCards = _dealerHand };
             return new BaseResponse<BlackJackGameModel>(blackjackGameModel);
-            // }
         }
-        public BaseResponse<BlackJackGameModel> SkipPlayer(int gameId,int userId)
+     //Принцип Единой ответственности, теперь в этом методе только код связанный с концом хода игрока. Ход Дилера вынесен в другой метод
+        /// <summary>
+        /// Игрок заканчивает ход
+        /// </summary>
+        /// <param name="gameId"> Ид игры</param>
+        /// <param name="userId">Юзер Ид</param>
+        /// <returns></returns>
+        public BaseResponse<BlackJackGameModel> SkipPlayer(int gameId, int userId)
         {
             int _playerScore;
-            int _dealerScore; 
+            // int _dealerScore;
             var gameHistory = _playerGameService.GetHistory(gameId, userId);
             Deck _deck = new Deck();
             _deck.HistoryDeck(gameHistory.CardsHistory.Deck);
             List<Card> _playerHand = gameHistory.CardsHistory.PlayerHand;
-            List<Card> _dealerHand = gameHistory.CardsHistory.DealerHand;
-            while (GetHandScore(_dealerHand) < 17)
-            {
-                _dealerHand.Add(_deck.DealCard());
-            }
+            //  List<Card> _dealerHand = gameHistory.CardsHistory.DealerHand;
+            //while (GetHandScore(_dealerHand) < 17)
+            //{
+            //    _dealerHand.Add(_deck.DealCard());
+            //}
             _playerScore = GetHandScore(_playerHand);
-            _dealerScore = GetHandScore(_dealerHand);
-            var cardsDeck = _deck.GetCards();
-            var saveGameHistoryRequest = new SaveGameHistoryRequest { Deck = cardsDeck, PlayerHand = _playerHand, DealerHand = _dealerHand, GameId = gameId };
+            // _dealerScore = GetHandScore(_dealerHand);
+            //var cardsDeck = _deck.GetCards();
+            var dealerTurn = Turn(new DealerTurnRequest { DealerHand= gameHistory.CardsHistory.DealerHand, Deck= _deck });
+            var saveGameHistoryRequest = new SaveGameHistoryRequest { Deck = dealerTurn.Data.Deck, PlayerHand = _playerHand, DealerHand = dealerTurn.Data.DealerHand, GameId = gameId };
             _playerGameService.SaveGameHistory(saveGameHistoryRequest);
-            var request = new DetermineWinnerRequest { GameId = gameId, UserId = userId, PlayerScore = _playerScore, DealerScore = _dealerScore };
+            var request = new DetermineWinnerRequest { GameId = gameId, UserId = userId, PlayerScore = _playerScore, DealerScore = dealerTurn.Data.DealerScore };
 
             var blackJackGameModel = DetermineWinner(request);
             return new BaseResponse<BlackJackGameModel>(blackJackGameModel.Data);
+        }
+       
+        /// <summary>
+        /// Ход дилера
+        /// </summary>
+        /// <param name="request">Карты в руке дилера и карты в колоде  </param>
+        /// <returns></returns>
+        private BaseResponse<DealerTurnResponse> Turn(DealerTurnRequest request)
+        {
+            while (GetHandScore(request.DealerHand) < 17)
+            {
+                request.DealerHand.Add(request.Deck.DealCard());
+            }
+            var response = new DealerTurnResponse
+            {
+                DealerHand = request.DealerHand,
+                DealerScore = GetHandScore(request.DealerHand),
+                Deck = request.Deck.GetCards()
+            };
+            return new BaseResponse<DealerTurnResponse>(response);
         }
         /// <summary>
         /// Определение победителя
@@ -202,7 +221,7 @@ namespace Casino.Services.Service
             var _playerHand = gameHistory.CardsHistory.PlayerHand;
             var _dealerHand = gameHistory.CardsHistory.DealerHand;
 
-            var response = new EndGameRequest() { GameId = request.GameId};
+            var response = new EndGameRequest() { GameId = request.GameId };
             if (request.PlayerScore == request.DealerScore || request.DealerScore > 21 && request.PlayerScore > 21)
             {
 
@@ -214,10 +233,10 @@ namespace Casino.Services.Service
 
             }
             else
-            if (request.DealerScore > request.PlayerScore && request.DealerScore <= 21 || request.PlayerScore> 21)
+            if (request.DealerScore > request.PlayerScore && request.DealerScore <= 21 || request.PlayerScore > 21)
             {
                 // Console.WriteLine("Дилер победил!");
-                    response.ResultGame = EnumStatusGame.Loss;
+                response.ResultGame = EnumStatusGame.Loss;
                 _playerGameService.EndGame(response);
                 var blackjackGameModel = new BlackJackGameModel { GameId = request.GameId, Status = EnumStatusGame.Loss, PLayerCards = _playerHand, DealerCards = _dealerHand };
                 return new BaseResponse<BlackJackGameModel>(blackjackGameModel);
@@ -232,33 +251,8 @@ namespace Casino.Services.Service
                 return new BaseResponse<BlackJackGameModel>(blackjackGameModel);
             }
 
-
-
         }
 
-        //private BaseResponse<BlackJackGameModel> PlayerTurn()
-        //{
-        //    _playerScore = GetHandScore(_playerHand);
-        //    while (_playerScore < 21)
-        //    {
-        //        ShowScores();
-        //        Console.WriteLine("Введите (Н)it - взять карту или (S)tand - остановиться");
-        //        var answer = Console.ReadLine().ToUpper();
-        //        if (answer == "H")
-        //        {
-        //            _playerHand.Add(_deck.DealCard());
-        //            ShowCardsPlayers();
 
-        //            _playerScore = GetHandScore(_playerHand);
-        //            ShowScores();
-        //            //Console.WriteLine($"У вас {_playerScore} очков."); 
-
-
-        //        }
-        //        else
-        //            break;
-        //    }
-
-        //}
     }
 }

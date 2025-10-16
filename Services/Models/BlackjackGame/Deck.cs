@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace Casino.Services.Models.BlackjackGame
 {
+    //Пример инкапсуляции
     /// <summary>
     /// Класс Колода
     /// </summary>

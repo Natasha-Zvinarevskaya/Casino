@@ -33,7 +33,7 @@ namespace Casino.Web.Controllers.WsControllers
         /// <returns>ид игры, статус игры (победа, проигрыш и т.д.), карты в руках дилера и игрока</returns>
         public BaseResponse<BlackJackGameModel> TurnPlayer(TurnPlayerRequest gameId)
         {
-            var response = _blackJackGameService.PlayerTurn(gameId.gameId,User.UserId);
+            var response = _blackJackGameService.Turn(gameId.gameId,User.UserId);
             return response;
         }
         /// <summary>

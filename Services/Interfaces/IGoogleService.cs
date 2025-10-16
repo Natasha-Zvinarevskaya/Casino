@@ -1,6 +1,7 @@
 ﻿using Casino.Services.Models;
 using Casino.Services.Models.BlackjackGame.Response;
 using Casino.Services.Request.GoogleAuth;
+using Casino.Services.Request.Users;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +18,7 @@ namespace Casino.Services.Interfaces
         BaseResponse<UserSessionModel> CheckUserExists(CheckUserExistsRequest request);
         BaseResponse GoogleRegister(GoogleRegisterRequest request);
         BaseResponse<UserSessionModel> GoogleLogin(GoogleLoginRequest request);
+
 
     }
 }
