@@ -17,6 +17,9 @@ using System;
 using Casino.Services.Request.GoogleAuth;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
+using Casino.Web.Middleware;
+using Logger.Extension.Extension;
+using Logger.Extension.Client.Interface;
 
 namespace Web
 {
@@ -29,6 +32,8 @@ namespace Web
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
+       
+
             builder.Services.AddDbContext<CasinoDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString(nameof(CasinoDbContext))));
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IUserSessionService, UserSessionService>();
@@ -36,8 +41,9 @@ namespace Web
             builder.Services.AddScoped<IPlayerGameService, PlayerGameService>();
             builder.Services.AddScoped<IUserTransactionService, UserTransactionService>();
             builder.Services.AddScoped<IGoogleService, GoogleServices>();
+            builder.Services.AddLoggerServcie(builder.Configuration);
 
-            // builder.Services.Configure<OptionGoogleSettings>(builder.Configuration);
+
             builder.Services.Configure<OptionGoogleSettings>(builder.Configuration.GetSection(nameof(OptionGoogleSettings)));
             builder.Services.AddCors();
 
@@ -94,7 +100,8 @@ namespace Web
                 //проверка наличия токена
                 if (string.IsNullOrEmpty(token.Value))
                     throw new Exception("Токен не найден. Доступ закрыт.");
-
+                
+                //Макс проверял бд
                 CheckUserResponse user;
                 if (token.Value == "FA71B9F4-BF59-4F0E-9234-67AD260444C4")
                 {
@@ -117,8 +124,10 @@ namespace Web
                 var ct = CancellationToken.None;
 
                 var webSocketManager = serviceProvider.GetService<Casino.Web.WebSockets.WebSocketManager>();
+                var loggerService = serviceProvider.GetService<ILoggerService>();
 
 
+                //Из бд берет пользователяи открывает для него сокет
                 var wsUser = new WsUser { Email = user.Email, Name = user.Name, Token = Guid.Parse(token.Value), UserId = user.Id };
                 webSocketManager.AddSocket(socket, wsUser);
                 while (socket.State == WebSocketState.Open)
@@ -126,7 +135,7 @@ namespace Web
                     var messageJson = await WebSocketsHelper.ReceiveStringAsync(socket, ct);
                     if (messageJson == null) break;
 
-                    await WebSocketsHelper.DispatchToControllerAsync(serviceProvider, context, socket, messageJson, ct);
+                    await WebSocketsHelper.DispatchToControllerAsync(serviceProvider, context, socket, messageJson, ct,token.Value, loggerService);
                 }
 
                 //Нужно создать событие , отслеживающие закрытие сокета

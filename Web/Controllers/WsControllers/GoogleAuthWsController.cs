@@ -39,15 +39,7 @@ namespace Casino.Web.Controllers.WsControllers
         }
        
 
-        ///// <summary>
-        ///// оповещение от гугла
-        ///// </summary>
-        ///// <returns></returns>
-        //public string callback(callbackgooglerequest request)
-        //{
-        //    var redirecturl = _googleservice.gettokengoogle(request);
-        //    return redirecturl;
-        //}
+        
 
        
 

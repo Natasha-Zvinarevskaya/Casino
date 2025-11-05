@@ -5,6 +5,16 @@ using System.Text.Json;
 using System.Text;
 using Casino.DataContext;
 using Casino.Services.Models.BlackjackGame;
+using System;
+using Azure.Core;
+using Casino.Web.Middleware;
+using Microsoft.AspNetCore.Http.Extensions;
+using static System.Net.Mime.MediaTypeNames;
+using Google.Apis.Drive.v3.Data;
+using Microsoft.VisualBasic;
+using Logger.Extension.Client.Interface;
+using Logger.Extension.Client.Models.Enums;
+using Logger.Extension.Client;
 
 namespace Casino.Web.WebSockets
 {
@@ -14,6 +24,7 @@ namespace Casino.Web.WebSockets
 
         public static async Task<string?> ReceiveStringAsync(WebSocket socket, CancellationToken ct)
         {
+
             var buffer = new byte[4 * 1024];
             using var ms = new MemoryStream();
             WebSocketReceiveResult? result;
@@ -30,10 +41,18 @@ namespace Casino.Web.WebSockets
             return Encoding.UTF8.GetString(ms.ToArray());
         }
 
-        public static async Task DispatchToControllerAsync(IServiceProvider scopedServices, HttpContext context, WebSocket socket, string messageJson, CancellationToken ct)
+        public static async Task DispatchToControllerAsync(IServiceProvider scopedServices,
+            HttpContext context,
+            WebSocket socket,
+            string messageJson,
+            CancellationToken ct,
+            string token,
+            ILoggerService loggerService)
         {
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-
+            Exception exception = null;
+            var dateStart = DateTime.UtcNow;
+            string argsBodys = "";
             try
             {
                 var doc = JsonDocument.Parse(messageJson);
@@ -53,7 +72,7 @@ namespace Casino.Web.WebSockets
                 // Находим тип контроллера: имя + "Controller"
                 var targetTypeName = controllerName.EndsWith("Controller", StringComparison.OrdinalIgnoreCase)
                     ? controllerName
-                    : controllerName + "Controller";
+                    : controllerName + "WsController";
 
                 var ctrlType = AppDomain.CurrentDomain.GetAssemblies()
                     .SelectMany(a => SafeGetTypes(a))
@@ -64,26 +83,8 @@ namespace Casino.Web.WebSockets
 
                 if (ctrlType == null)
                 {
-                    //await SendSocketResponse(socket, new { error = $"Controller '{targetTypeName}' not found." }, ct);
-                    await SendSocketResponse(socket, new
-                    {
-                        IsSucces = true,
-                        ErrorMessage = "",
-                        Data = new
-                        {
-                            GameId = 1,
-                            Status = 0,
-                            DealerCards = new List<Card>() {
-                                new Card() { Suit = Services.Enums.BlackjackGame.CardSuit.Hearts, Value = Services.Enums.BlackjackGame.CardValue.Seven },
-                             new Card() { Suit = Services.Enums.BlackjackGame.CardSuit.Clubs, Value = Services.Enums.BlackjackGame.CardValue.Seven }
-                            },
-                            PLayerCards = new List<Card>() {
-                                new Card() { Suit = Services.Enums.BlackjackGame.CardSuit.Hearts, Value = Services.Enums.BlackjackGame.CardValue.Eight },
-                             new Card() { Suit = Services.Enums.BlackjackGame.CardSuit.Clubs, Value = Services.Enums.BlackjackGame.CardValue.Eight }
-                            },
-                        }
-                    }
-              , ct);
+                    await SendSocketResponse(socket, new { error = $"Controller '{targetTypeName}' not found." }, ct);
+
 
 
                     return;
@@ -113,7 +114,7 @@ namespace Casino.Web.WebSockets
                 }
 
 
-               
+
                 var controllerInstance = ActivatorUtilities.CreateInstance(scopedServices, ctrlType) as WsController;
                 if (controllerInstance == null)
                 {
@@ -153,6 +154,11 @@ namespace Casino.Web.WebSockets
 
                 // Вызов метода
                 var invokeResult = method.Invoke(controllerInstance, args);
+                if (args != null)
+                    argsBodys = JsonSerializer.Serialize(args);
+                else throw new Exception("args = null");
+
+
 
                 // Если метод возвращает Task / Task<T>
                 if (invokeResult is Task task)
@@ -181,29 +187,104 @@ namespace Casino.Web.WebSockets
             catch (Exception ex)
             {
                 await SendSocketResponse(socket, new { error = ex.Message, stack = ex.StackTrace }, ct);
+                exception = ex;
+
             }
-        }
-
-        static async Task SendSocketResponse(WebSocket socket, object payload, CancellationToken ct)
-        {
-            var json = JsonSerializer.Serialize(payload);
-            var bytes = Encoding.UTF8.GetBytes(json);
-            await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, ct);
-        }
-
-        // Помощник: безопасный GetTypes (чтобы не падать на недоступных сборках)
-        static IEnumerable<Type> SafeGetTypes(Assembly assembly)
-        {
-            try
+            finally
             {
-                return assembly.GetTypes();
-            }
-            catch
-            {
-                return Array.Empty<Type>();
-            }
-        }
+                try
+                {
+                    var dateEnd = DateTime.UtcNow;
+                    var request = context.Request;
+                    var connManager = scopedServices.GetRequiredService<WebSocketManager>();
+                    var user = connManager.GetUser(socket);
 
+                    var logLevel = EnumLevelId.Trace;
+                    if (exception != null)
+                    {
+                        logLevel = EnumLevelId.Error;
+                        
+                    }
+                    var loggerRequst = new Logger.Extension.Client.Models.LogRequest(EnumType.WebSocket, logLevel, "WebSocket")
+                        .SetRequestBody(argsBodys)
+                        .SetUserId(user.UserId.ToString())
+                        .SetSessionToken(new Guid(token))
+                        .SetIp(context.Connection.RemoteIpAddress?.ToString())
+                        .SetUserAgent(context.Request.Headers["User-Agent"].ToString());
+
+                    if (exception != null)
+                        loggerRequst.SetError(exception);
+
+                    loggerService.SaveLog(loggerRequst);
+
+                    //var response = new LogRequest
+                    //{
+                    //    RequestId = Guid.NewGuid(), //guid
+                    //    DateStart = dateStart,
+                    //    LoggerName = "TestLoggerName",
+                    //    Url = context.Request.GetDisplayUrl(),
+                    //    Type = 1, //int
+                    //    RequestLenght = 1, //int
+                    //    ResponseLenght = 1, //int
+                    //    DateEnd = dateEnd,
+                    //    LevelId = 1, //int
+                    //    SessionToken = new Guid(token), //guid
+                    //    UserId = user.UserId.ToString(),
+                    //    Ip = context.Connection.RemoteIpAddress?.ToString(),
+                    //    ShortMessage = "WebSocket",
+                    //    UserAgent = context.Request.Headers["User-Agent"].ToString(),
+                    //    RequestBody = argsBodys,
+                    //    Message = "TestMessage"
+                    //};
+
+                    //if (exception != null)
+                    //{
+                    //    var errMsg = $"Message: {exception.GetBaseException().Message} \nStackTrace: {exception.StackTrace}";
+                    //    response.Error = errMsg;
+                    //}
+
+                    //if (string.IsNullOrEmpty(argsBodys))
+                    //{
+                    //    var reqBody = "";
+                    //    response.RequestBody = reqBody;
+                    //}
+
+
+                    //var messageRequest = new MessageRequest { Controller = "Log", Method = "AddLog", Value = response };
+                    //string jsonMessage = JsonSerializer.Serialize(messageRequest);
+                    //var wsClient = new WsClient();
+                    //wsClient.SendMessage(jsonMessage);
+                     
+                    
+                }
+                catch (Exception ex)
+                {
+
+                }
+
+            }
+
+            static async Task SendSocketResponse(WebSocket socket, object payload, CancellationToken ct)
+            {
+                var json = JsonSerializer.Serialize(payload);
+                var bytes = Encoding.UTF8.GetBytes(json);
+                await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, ct);
+            }
+
+            // Помощник: безопасный GetTypes (чтобы не падать на недоступных сборках)
+            static IEnumerable<Type> SafeGetTypes(Assembly assembly)
+            {
+                try
+                {
+                    return assembly.GetTypes();
+                }
+                catch
+                {
+                    return Array.Empty<Type>();
+                }
+            }
+
+        }
     }
 }
 

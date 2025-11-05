@@ -69,32 +69,35 @@ namespace Casino.Services.Service
         /// <returns>Модель сессии</returns>
         public BaseResponse<UserSessionModel> Login(LoginRequest request)
         {
-            var passwordHash = CreateSHA256(request.Password);
-            using var db = new CasinoDbContext(_options);
-            var user = db.Users.FirstOrDefault(x => x.Email == request.Email && x.Password == passwordHash);
-            if (user == null)
-                return new BaseResponse<UserSessionModel>("Пользователь не найден");
-            var dataClose = DateTime.UtcNow;
-            dataClose.AddHours(3);
-            var token = Guid.NewGuid();
-            var session = new UserSession
-            {
-                UserId = user.Id,
-                Token = token,
-                DateCreate = DateTime.UtcNow,
-                DateClose = dataClose
-            };
-            db.UserSessions.Add(session);
-            db.SaveChanges();
-            var response = new UserSessionModel
-            {
-                Id = session.Id,
-                Token = session.Token,
-                DateClose = session.DateClose,
-                DateCreate = session.DateCreate
-            };
-            return new BaseResponse<UserSessionModel>(response);
-
+        
+           
+                var passwordHash = CreateSHA256(request.Password);
+                using var db = new CasinoDbContext(_options);
+                var user = db.Users.FirstOrDefault(x => x.Email == request.Email && x.Password == passwordHash);
+                if (user == null)
+                    return new BaseResponse<UserSessionModel>("Пользователь не найден");
+                var dataClose = DateTime.UtcNow;
+                dataClose.AddHours(3);
+                var token = Guid.NewGuid();
+                var session = new UserSession
+                {
+                    UserId = user.Id,
+                    Token = token,
+                    DateCreate = DateTime.UtcNow,
+                    DateClose = dataClose
+                };
+                db.UserSessions.Add(session);
+                db.SaveChanges();
+                var response = new UserSessionModel
+                {
+                    Id = session.Id,
+                    Token = session.Token,
+                    DateClose = session.DateClose,
+                    DateCreate = session.DateCreate
+                };
+                return new BaseResponse<UserSessionModel>(response);
+            
+            
 
         }
         /// <summary>
