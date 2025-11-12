@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using System.Drawing;
 using System.Reflection;
 using Casino.Services.Request.GoogleAuth;
+using Casino.DataContext.Enums;
 
 namespace Casino.Services.Service
 {
@@ -164,7 +165,18 @@ namespace Casino.Services.Service
             File.WriteAllBytes(fullPath, bytes);
             return new BaseResponse();
         }
-       
+
+        public BaseResponse<List<int>> GetListUsersId(int gameId)
+        {
+            var db = new CasinoDbContext(_options);
+            var playerGames = db.PlayerGames.Where(x => x.Game == (EnumGames)gameId).ToList();
+            var response = new List<int>();
+            foreach (var playerGame in playerGames)
+            {
+                response.Add(playerGame.UserId);
+            }
+            return new BaseResponse<List<int>>(response);
+        }
 
 
     }

@@ -18,8 +18,10 @@ using Casino.Services.Request.GoogleAuth;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Casino.Web.Middleware;
-using Logger.Extension.Extension;
+//using Logger.Extension.Extension;
 using Logger.Extension.Client.Interface;
+using WS.Extension.Extension;
+
 
 namespace Web
 {
@@ -127,9 +129,11 @@ namespace Web
                 var loggerService = serviceProvider.GetService<ILoggerService>();
 
 
-                //»з бд берет пользовател€и открывает дл€ него сокет
+                //»з бд берет пользовател€ и открывает дл€ него сокет
                 var wsUser = new WsUser { Email = user.Email, Name = user.Name, Token = Guid.Parse(token.Value), UserId = user.Id };
                 webSocketManager.AddSocket(socket, wsUser);
+
+                //÷икл (пока открыт сокет) слушает сообщение от фронта
                 while (socket.State == WebSocketState.Open)
                 {
                     var messageJson = await WebSocketsHelper.ReceiveStringAsync(socket, ct);

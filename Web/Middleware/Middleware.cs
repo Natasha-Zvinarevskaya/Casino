@@ -37,11 +37,7 @@ namespace Casino.Web.Middleware
                 //var email = context.Request.Query["email"];
                 //Console.WriteLine(email);
 
-       
-
-                
-
-
+     
 
             }
             catch (Exception ex)
@@ -75,7 +71,6 @@ namespace Casino.Web.Middleware
                         RequestBody = "TestRequestBody",
                         Message = "TestMessage"
                     };
-                    // string jsonLogRequest = JsonSerializer.Serialize(response);
 
                     var messageRequest = new MessageRequest { Controller = "Log", Method = "AddLog", Value = response };
                     string jsonMessage = JsonSerializer.Serialize(messageRequest);

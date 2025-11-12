@@ -13,11 +13,12 @@ namespace Casino.Services.Interfaces
 {
     public interface IUserService
     {
-      BaseResponse<int> Registration(RegisterRequest request);
+        BaseResponse<int> Registration(RegisterRequest request);
         BaseResponse<UserSessionModel> Login(LoginRequest request);
-         BaseResponse<ShowUserDataResponse> GetUserData(int userId);
+        BaseResponse<ShowUserDataResponse> GetUserData(int userId);
         BaseResponse ChangeUserName(BaseUserIdReq<ChangeUserNameRequest> request);
         BaseResponse SaveUserImage(BaseUserIdReq<SaveUserImageRequest> request);
+        BaseResponse<List<int>> GetListUsersId(int gameId);
 
 
 

@@ -78,7 +78,7 @@ namespace Casino.Web.WebSockets
                     .SelectMany(a => SafeGetTypes(a))
                     .FirstOrDefault(t =>
                         string.Equals(t.Name, targetTypeName, StringComparison.OrdinalIgnoreCase) &&
-                        typeof(ControllerBase).IsAssignableFrom(t) &&
+                        typeof(WsController).IsAssignableFrom(t) &&
                         t.IsPublic);
 
                 if (ctrlType == null)
@@ -219,7 +219,7 @@ namespace Casino.Web.WebSockets
 
                     //var response = new LogRequest
                     //{
-                    //    RequestId = Guid.NewGuid(), //guid
+                    //    RequestId = Guid.NewGuid(), //guidx   
                     //    DateStart = dateStart,
                     //    LoggerName = "TestLoggerName",
                     //    Url = context.Request.GetDisplayUrl(),
