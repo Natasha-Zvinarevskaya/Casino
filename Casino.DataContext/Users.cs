@@ -35,11 +35,16 @@ namespace Casino.DataContext
         public decimal Balance { get; set; }
 
 
-        public List<PlayerGame> PlayerGames { get; set; }
+        public List<Game> Games { get; set; }
 
         public List<UserTransactions> Transactions { get; set; }
         public List<UserSession> UserSessions { get; set; }
 
         public UserProvider UserProvider { get; set; }
+
+        public List <MoneyTransaction> MoneyTransactions { get; set; }
+        public StripeCustomer StripeUser { get; set; }
+        public List <Payment> Payments { get; set; }
+        public List<UsersGame> UsersGames { get; set; }
     }
 }

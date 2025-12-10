@@ -30,7 +30,7 @@ namespace Casino.DataContext
         /// <summary>
         /// Игра
         /// </summary>
-        public int PlayerGame { get; set; }
+        public EnumGames Game { get; set; }
 
 
         public int UsersId { get; set; }

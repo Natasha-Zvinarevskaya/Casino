@@ -1,8 +1,6 @@
 ﻿using Casino.DataContext;
 using Casino.Services.Interfaces;
-using Casino.Services.Models.BlackjackGame.Response;
 using Casino.Services.Models;
-using Casino.Services.Request.GoogleAuth;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -20,6 +18,7 @@ using Casino.Services.Models.GoogleService;
 using Microsoft.EntityFrameworkCore;
 using Azure.Core;
 using System.Security.Cryptography;
+using Casino.Services.RequestResponse.GoogleAuth.Request;
 
 
 namespace Casino.Services.Service
@@ -69,7 +68,7 @@ namespace Casino.Services.Service
         {
 
             string idToken = id_token;
-            // Разбиваем на части
+            // Разбиваем токен на части
             var parts = idToken.Split('.');
             if (parts.Length < 2)
                 return new BaseResponse<ResponseGetEmail>("Некорректный токен.");
@@ -83,7 +82,7 @@ namespace Casino.Services.Service
             string json = DecodeBase64Url(payload);
 
 
-            // При желании можно десериализовать в объект
+            //  Десериализуем в объект
 
             var data = JsonSerializer.Deserialize<ModelGoogleUserData>(json);
             var response = new ResponseGetEmail { Email = data.email, Name = data.name };

@@ -1,0 +1,51 @@
+﻿using Casino.DataContext.Enums;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Casino.DataContext
+{
+    /// <summary>
+    /// Игра
+    /// </summary>
+    public class Game
+    {
+        /// <summary>
+        /// Id игры
+        /// </summary>
+        public int Id { get; set; }
+        /// <summary>
+        /// Время начала игры
+        /// </summary>
+        public DateTime Date { get; set; }
+        /// <summary>
+        /// Статус игры
+        /// </summary>
+        public EnumStatusGame Status { get; set; }
+        /// <summary>
+        /// Время окончания игры
+        /// </summary>
+        public DateTime? DateEnd { get; set; }
+        /// <summary>
+        /// Сумма ставки
+        /// </summary>
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal AmountBet { get; set; }
+        /// <summary>
+        /// Какая игра из доступных выбрана
+        /// </summary>
+        public EnumGames Games { get; set; }
+
+
+        //public Users User { get; set; }
+        //public int UserId { get; set; }
+
+        public GameSettings GameSettings { get; set; }
+        public GameHistory GameHistory { get; set; }
+
+        public List<UsersGame> UsersGames { get; set; }
+    }
+}

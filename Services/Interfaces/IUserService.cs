@@ -1,8 +1,7 @@
 ﻿using Casino.Services.Models;
-using Casino.Services.Models.BlackjackGame.Response;
-using Casino.Services.Models.UserService.Request;
-using Casino.Services.Models.UserService.Response;
-using Casino.Services.Request.Users;
+using Casino.Services.RequestResponse.Users.Request;
+using Casino.Services.RequestResponse.UserService.Request;
+using Casino.Services.RequestResponse.UserService.Response;
 using System;
 using System.Collections.Generic;
 using System.Linq;

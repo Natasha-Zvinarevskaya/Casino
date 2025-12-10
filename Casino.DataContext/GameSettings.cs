@@ -21,9 +21,14 @@ namespace Casino.DataContext
         /// </summary>
         [Column(TypeName = "decimal(18,2)")]
         public decimal AmountWin { get; set; }
+        /// <summary>
+        /// Максимальное кол-во игроков
+        /// </summary>
+        public int MaxCountPlayers { get; set; }
 
-        public PlayerGame PlayerGame { get; set; }
-        public int PlayerGameId { get; set; }
+        public Game Game { get; set; }
+        public int GameId { get; set; }
+        
 
 
     }

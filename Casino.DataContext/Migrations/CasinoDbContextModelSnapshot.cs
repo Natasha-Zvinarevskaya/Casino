@@ -22,51 +22,7 @@ namespace Casino.DataContext.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Casino.DataContext.GameHistory", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CardsHistory")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("PlayerGameId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PlayerGameId")
-                        .IsUnique();
-
-                    b.ToTable("GameHistory");
-                });
-
-            modelBuilder.Entity("Casino.DataContext.GameSettings", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("AmountWin")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("PlayerGameId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PlayerGameId")
-                        .IsUnique();
-
-                    b.ToTable("GameSettings");
-                });
-
-            modelBuilder.Entity("Casino.DataContext.PlayerGame", b =>
+            modelBuilder.Entity("Casino.DataContext.Game", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -83,8 +39,106 @@ namespace Casino.DataContext.Migrations
                     b.Property<DateTime?>("DateEnd")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("Game")
+                    b.Property<int>("Games")
                         .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UsersId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UsersId");
+
+                    b.ToTable("Games");
+                });
+
+            modelBuilder.Entity("Casino.DataContext.GameHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("GameId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("History")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GameId")
+                        .IsUnique();
+
+                    b.ToTable("GameHistory");
+                });
+
+            modelBuilder.Entity("Casino.DataContext.GameSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("AmountWin")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("GameId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxCountPlayers")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GameId")
+                        .IsUnique();
+
+                    b.ToTable("GameSettings");
+                });
+
+            modelBuilder.Entity("Casino.DataContext.MoneyTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("MoneyTransactions");
+                });
+
+            modelBuilder.Entity("Casino.DataContext.Payment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -96,7 +150,44 @@ namespace Casino.DataContext.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PlayerGames");
+                    b.ToTable("Payments");
+                });
+
+            modelBuilder.Entity("Casino.DataContext.StripeCustomer", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AccountCard")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CardLast")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CardType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CustomerId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DateCreate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PaymentMethodId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("StripeCustomers");
                 });
 
             modelBuilder.Entity("Casino.DataContext.UserProvider", b =>
@@ -165,7 +256,7 @@ namespace Casino.DataContext.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("PlayerGame")
+                    b.Property<int>("Game")
                         .HasColumnType("int");
 
                     b.Property<int>("Type")
@@ -206,33 +297,77 @@ namespace Casino.DataContext.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("Casino.DataContext.UsersGame", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("GameId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserId", "GameId");
+
+                    b.HasIndex("GameId");
+
+                    b.ToTable("UsersGames");
+                });
+
+            modelBuilder.Entity("Casino.DataContext.Game", b =>
+                {
+                    b.HasOne("Casino.DataContext.Users", null)
+                        .WithMany("Games")
+                        .HasForeignKey("UsersId");
+                });
+
             modelBuilder.Entity("Casino.DataContext.GameHistory", b =>
                 {
-                    b.HasOne("Casino.DataContext.PlayerGame", "PlayerGame")
+                    b.HasOne("Casino.DataContext.Game", "Game")
                         .WithOne("GameHistory")
-                        .HasForeignKey("Casino.DataContext.GameHistory", "PlayerGameId")
+                        .HasForeignKey("Casino.DataContext.GameHistory", "GameId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("PlayerGame");
+                    b.Navigation("Game");
                 });
 
             modelBuilder.Entity("Casino.DataContext.GameSettings", b =>
                 {
-                    b.HasOne("Casino.DataContext.PlayerGame", "PlayerGame")
+                    b.HasOne("Casino.DataContext.Game", "Game")
                         .WithOne("GameSettings")
-                        .HasForeignKey("Casino.DataContext.GameSettings", "PlayerGameId")
+                        .HasForeignKey("Casino.DataContext.GameSettings", "GameId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("PlayerGame");
+                    b.Navigation("Game");
                 });
 
-            modelBuilder.Entity("Casino.DataContext.PlayerGame", b =>
+            modelBuilder.Entity("Casino.DataContext.MoneyTransaction", b =>
                 {
                     b.HasOne("Casino.DataContext.Users", "User")
-                        .WithMany("PlayerGames")
+                        .WithMany("MoneyTransactions")
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Casino.DataContext.Payment", b =>
+                {
+                    b.HasOne("Casino.DataContext.Users", "User")
+                        .WithMany("Payments")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Casino.DataContext.StripeCustomer", b =>
+                {
+                    b.HasOne("Casino.DataContext.Users", "User")
+                        .WithOne("StripeUser")
+                        .HasForeignKey("Casino.DataContext.StripeCustomer", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -272,22 +407,51 @@ namespace Casino.DataContext.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Casino.DataContext.PlayerGame", b =>
+            modelBuilder.Entity("Casino.DataContext.UsersGame", b =>
+                {
+                    b.HasOne("Casino.DataContext.Game", "Game")
+                        .WithMany("UsersGames")
+                        .HasForeignKey("GameId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Casino.DataContext.Users", "User")
+                        .WithMany("UsersGames")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Game");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Casino.DataContext.Game", b =>
                 {
                     b.Navigation("GameHistory");
 
                     b.Navigation("GameSettings");
+
+                    b.Navigation("UsersGames");
                 });
 
             modelBuilder.Entity("Casino.DataContext.Users", b =>
                 {
-                    b.Navigation("PlayerGames");
+                    b.Navigation("Games");
+
+                    b.Navigation("MoneyTransactions");
+
+                    b.Navigation("Payments");
+
+                    b.Navigation("StripeUser");
 
                     b.Navigation("Transactions");
 
                     b.Navigation("UserProvider");
 
                     b.Navigation("UserSessions");
+
+                    b.Navigation("UsersGames");
                 });
 #pragma warning restore 612, 618
         }

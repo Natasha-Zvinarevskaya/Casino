@@ -12,15 +12,17 @@ using Casino.Services.Service;
 using Microsoft.AspNetCore.Authentication;
 using Azure.Core;
 using Microsoft.IdentityModel.Tokens;
-using Casino.Services.Models.UserSessionServiceModel.Response;
 using System;
-using Casino.Services.Request.GoogleAuth;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Casino.Web.Middleware;
 //using Logger.Extension.Extension;
 using Logger.Extension.Client.Interface;
 using WS.Extension.Extension;
+using Stripe.Extension.Interfaces;
+using Stripe.Extension.Services;
+using Casino.Services.RequestResponse.GoogleAuth.Request;
+using Casino.Services.RequestResponse.UserSessionService.Response;
 
 
 namespace Web
@@ -34,7 +36,7 @@ namespace Web
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
-       
+
 
             builder.Services.AddDbContext<CasinoDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString(nameof(CasinoDbContext))));
             builder.Services.AddScoped<IUserService, UserService>();
@@ -44,6 +46,8 @@ namespace Web
             builder.Services.AddScoped<IUserTransactionService, UserTransactionService>();
             builder.Services.AddScoped<IGoogleService, GoogleServices>();
             builder.Services.AddLoggerServcie(builder.Configuration);
+            builder.Services.AddScoped<IStripeUserService, StripeUserService>();
+            builder.Services.AddScoped<IStripePaymentServices, StripePaymentServices>();
 
 
             builder.Services.Configure<OptionGoogleSettings>(builder.Configuration.GetSection(nameof(OptionGoogleSettings)));
@@ -52,12 +56,12 @@ namespace Web
 
 
             builder.Services.AddSingleton<Casino.Web.WebSockets.WebSocketManager>();
-              
+
             builder.Services.AddAuthentication("Cookies"); //Сервисы аутенфикации через куки 
             builder.Services.AddAuthorization(); //Сервисы авторизации
             builder.Services.AddSession(); //Сервисы для сессии
 
-            
+
 
             var app = builder.Build();
 
@@ -85,7 +89,7 @@ namespace Web
             //Подключение сервисов,чтобы передать значение переменной
             var serviceProvider = builder.Services.BuildServiceProvider();
 
-          
+
 
             // Для вебСокета
             app.Map("/ws", async context =>
@@ -102,7 +106,7 @@ namespace Web
                 //проверка наличия токена
                 if (string.IsNullOrEmpty(token.Value))
                     throw new Exception("Токен не найден. Доступ закрыт.");
-                
+
                 //Макс проверял бд
                 CheckUserResponse user;
                 if (token.Value == "FA71B9F4-BF59-4F0E-9234-67AD260444C4")
@@ -139,7 +143,7 @@ namespace Web
                     var messageJson = await WebSocketsHelper.ReceiveStringAsync(socket, ct);
                     if (messageJson == null) break;
 
-                    await WebSocketsHelper.DispatchToControllerAsync(serviceProvider, context, socket, messageJson, ct,token.Value, loggerService);
+                    await WebSocketsHelper.DispatchToControllerAsync(serviceProvider, context, socket, messageJson, ct, token.Value, loggerService);
                 }
 
                 //Нужно создать событие , отслеживающие закрытие сокета

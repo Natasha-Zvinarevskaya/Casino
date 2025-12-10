@@ -49,9 +49,10 @@ namespace Casino.Web.WebSockets
 
         public async void SendMessage(string request)
         {
-            
+
+        //ws://localhost:5084/ws?token=FA71B9F4-BF59-4F0E-9234-67AD260444C4
             using var ws = new ClientWebSocket();
-            await ws.ConnectAsync(new Uri("ws://localhost:5084/ws?token=FA71B9F4-BF59-4F0E-9234-67AD260444C4"), CancellationToken.None);
+           await ws.ConnectAsync(new Uri("ws://logger.com:8081/ws?token=FA71B9F4-BF59-4F0E-9234-67AD260444C4"), CancellationToken.None);
 
             // сообщение для отправки
             var message = request;

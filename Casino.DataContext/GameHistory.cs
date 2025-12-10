@@ -15,11 +15,12 @@ namespace Casino.DataContext
     {
         public int Id { get; set; }
         /// <summary>
-        /// json формат карт дилера и карт игрока
+        /// json формат истории игры
         /// </summary>
-        public string CardsHistory { get; set; }
+        public string History { get; set; }
+     
 
-        public int PlayerGameId { get; set; }
-        public PlayerGame PlayerGame { get; set; }
+        public int GameId { get; set; }
+        public Game Game { get; set; }
     }
 }

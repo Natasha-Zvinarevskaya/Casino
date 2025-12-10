@@ -21,7 +21,7 @@ namespace Casino.Web.WebSockets
     public class WebSocketsHelper
     {
         // ----------------- Вспомогательные методы -----------------
-
+       
         public static async Task<string?> ReceiveStringAsync(WebSocket socket, CancellationToken ct)
         {
 
@@ -156,6 +156,7 @@ namespace Casino.Web.WebSockets
                 var invokeResult = method.Invoke(controllerInstance, args);
                 if (args != null)
                     argsBodys = JsonSerializer.Serialize(args);
+           
                 else throw new Exception("args = null");
 
 

@@ -1,5 +1,4 @@
 ﻿using Casino.Services.Interfaces;
-using Casino.Services.Request.GoogleAuth;
 using Casino.Web.WebSockets;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
@@ -9,6 +8,7 @@ using static System.Net.WebRequestMethods;
 using System.Text.Encodings.Web;
 using Casino.DataContext;
 using Google.Apis.Drive.v3.Data;
+using Casino.Services.RequestResponse.GoogleAuth.Request;
 
 namespace Casino.Web.Controllers.WsControllers
 {

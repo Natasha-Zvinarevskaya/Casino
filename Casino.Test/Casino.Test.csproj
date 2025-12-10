@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Services\Casino.Services.csproj" />
+    <ProjectReference Include="..\Web\Casino.Web.csproj" />
   </ItemGroup>
 
   <ItemGroup>

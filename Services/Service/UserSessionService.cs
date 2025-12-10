@@ -1,7 +1,7 @@
 ﻿using Casino.DataContext;
 using Casino.Services.Interfaces;
-using Casino.Services.Models.BlackjackGame.Response;
-using Casino.Services.Models.UserSessionServiceModel.Response;
+using Casino.Services.Models;
+using Casino.Services.RequestResponse.UserSessionService.Response;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -18,7 +18,7 @@ namespace Casino.Services.Service
         {
             _options = options;
         }
-        //через сессии посмотреть есть ли такой юзер  и метод вернет модель юзера (ид,маил и тд)
+     
         /// <summary>
         /// Проверяет есть ли у пользователь доступ и отправляет данные о пользователе
         /// </summary>
@@ -42,16 +42,22 @@ namespace Casino.Services.Service
                 Name = user.Name
 
             };
-
             return new BaseResponse<CheckUserResponse>(userModel);
-
         }
+
+        /// <summary>
+        /// Выход пользователя из игры
+        /// </summary>
+        /// <param name="userSessionId">Ид сессии пользователя</param>
+        /// <exception cref="Exception"></exception>
         public void UserExit (int userSessionId)
         {
             var db = new CasinoDbContext(_options);
             var userSession = db.UserSessions.FirstOrDefault(x => x.Id == userSessionId);
             if (userSession == null)
                 throw new Exception("Сессия не найдена.");
+
+            //Удаляет сессию из бд
             db.UserSessions.Remove(userSession);
             db.SaveChanges();
         }

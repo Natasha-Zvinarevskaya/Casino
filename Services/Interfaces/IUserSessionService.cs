@@ -1,10 +1,10 @@
-﻿using Casino.Services.Models.UserSessionServiceModel.Response;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Casino.Services.Models.BlackjackGame.Response;
+using Casino.Services.Models;
+using Casino.Services.RequestResponse.UserSessionService.Response;
 
 namespace Casino.Services.Interfaces
 {

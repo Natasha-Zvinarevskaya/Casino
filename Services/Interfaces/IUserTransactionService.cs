@@ -1,8 +1,7 @@
 ﻿using Casino.DataContext;
 using Casino.Services.Models;
-using Casino.Services.Models.BlackjackGame.Response;
-using Casino.Services.Models.UserTransactionService.Request;
-using Casino.Services.Models.UserTransactionService.Response;
+using Casino.Services.RequestResponse.UserTransactionService.Request;
+using Casino.Services.RequestResponse.UserTransactionService.Response;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,8 +12,8 @@ namespace Casino.Services.Interfaces
 {
     public interface IUserTransactionService
     {
-        void EndGameTransaction(int gameId);
-        void ReplenishmentBalance(TopUpBalanceRequest request);
+        void EndGameTransaction(int gameId,int userId);
+        void ReplenishmentBalance(BaseUserIdReq<TopUpBalanceRequest> request);
         BaseResponse<GetHistoryTransactionResponse> GetHistoryTransactions(int userId);
 
 

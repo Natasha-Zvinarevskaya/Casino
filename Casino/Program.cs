@@ -1,7 +1,7 @@
 ﻿using Casino.Services;
 using Casino.Services.Interfaces;
-using Casino.Services.Models.BlackjackGame.Requests;
-using Casino.Services.Models.PlayerGameService.Request;
+using Casino.Services.RequestResponse.BlackjackGame.Requests;
+using Casino.Services.RequestResponse.PlayerGameService.Request;
 using Casino.Services.Service;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,7 +28,7 @@ namespace Casino
 
                 Console.WriteLine("Выберите игру из списка и введите ее номер: \n1. Блэкджек.");
                 var answerUser = Convert.ToInt32(Console.ReadLine());
-                var request = new StartGameRequest() { UserId = 4, Game = answerUser };
+                var request = new StartGameRequest() {  Game = answerUser };
                 var gameId = playerGameService.StartGame(request);
 
                 new BlackjackGameService(playerGameService).Play(new BlackjackPlayRequest() { });//GameId = gameId });

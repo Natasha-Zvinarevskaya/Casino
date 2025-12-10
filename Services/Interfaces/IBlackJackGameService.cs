@@ -1,6 +1,7 @@
-﻿using Casino.Services.Models.BlackjackGame;
-using Casino.Services.Models.BlackjackGame.Requests;
-using Casino.Services.Models.BlackjackGame.Response;
+﻿using Casino.Services.Models;
+using Casino.Services.Models.BlackjackGame;
+using Casino.Services.RequestResponse.BlackjackGame.Requests;
+using Casino.Services.RequestResponse.BlackjackGame.Response;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,12 +10,13 @@ using System.Threading.Tasks;
 
 namespace Casino.Services.Interfaces
 {
-   public  interface IBlackJackGameService
+    public interface IBlackJackGameService
     {
-        BaseResponse<BlackJackGameModel> Play(BlackjackPlayRequest request,int userId);
-        BaseResponse<BlackJackGameModel> Turn(int gameId, int userId);
-         BaseResponse<BlackJackGameModel> SkipPlayer(int gameId, int userId);
-       
+        BaseResponse<BlackJackGameModel> Play(BlackjackPlayRequest request);
+        BaseResponse<BlackJackGameModel> Turn(int gameId, int? userId);
+        BaseResponse<BlackJackGameModel> SkipPlayer(int gameId);
+
+
 
 
     }

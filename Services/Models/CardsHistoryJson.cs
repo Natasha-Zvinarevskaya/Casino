@@ -19,11 +19,18 @@ namespace Casino.Services.Models
         /// <summary>
         /// карты игрока
         /// </summary>
-        public List<Card> PlayerHand { get; set; }
+        //public List<Card> PlayerHand { get; set; }
         /// <summary>
         /// карты дилера
         /// </summary>
-        public List<Card> DealerHand { get; set; }
+        //public List<Card> DealerHand { get; set; }
+        /// <summary>
+        /// Список с картами всех игроков
+        /// </summary>
+        public List<PlayerModel> Players { get; set; }
+        public int PlayersSkiped { get; set; }
+
+
 
     }
 }

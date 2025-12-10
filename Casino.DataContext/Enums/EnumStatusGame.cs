@@ -26,6 +26,20 @@ namespace Casino.DataContext.Enums
         /// <summary>
         /// Ничья 
         /// </summary>
-        Draw
+        Draw,
+        /// <summary>
+        /// Ожидание игроков
+        /// </summary>
+        WaitingPlayers,
+        /// <summary>
+        /// Готово к игре
+        /// </summary>
+        ReadyToGame,
+        /// <summary>
+        /// Конец игры
+        /// </summary>
+        GameOver
+
+
     }
 }

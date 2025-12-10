@@ -3,9 +3,8 @@ using Casino.DataContext;
 using Casino.DataContext.Enums;
 using Casino.Services.Interfaces;
 using Casino.Services.Models;
-using Casino.Services.Models.BlackjackGame.Response;
-using Casino.Services.Models.UserTransactionService.Request;
-using Casino.Services.Models.UserTransactionService.Response;
+using Casino.Services.RequestResponse.UserTransactionService.Request;
+using Casino.Services.RequestResponse.UserTransactionService.Response;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 using System;
@@ -28,31 +27,36 @@ namespace Casino.Services.Service
         /// </summary>
         /// <param name="gameId">Ид игры</param>
         /// <exception cref="Exception"></exception>
-        public void EndGameTransaction(int gameId)
+        public void EndGameTransaction(int gameId,int userId)
         {
+            //Находим сыгранную игру и пользователя
             var db = new CasinoDbContext(_options);
-            var game = db.PlayerGames.FirstOrDefault(x => x.Id == gameId);
-            if (game == null)
-                throw new Exception("Игра не найдена");
-            var user = db.Users.FirstOrDefault(x => x.Id == game.UserId);
-            if (user == null)
-                throw new Exception("Пользователь не найдена");
+            var userGame = db.UsersGames.FirstOrDefault(x=>x.GameId == gameId && x.UserId == userId);
+            if (userGame == null)
+                throw new Exception("Пользовательская игра не найдена.");
+            
+            var game = db.Games.FirstOrDefault(x => x.Id == gameId );
+            
+            var user = db.Users.FirstOrDefault(x => x.Id == userId);
+            
 
-            var gameSettings = db.GameSettings.FirstOrDefault(x => x.PlayerGameId == game.Id);
+            //Находим настройки для определения коэффициента выигрыша/проигрыша
+            var gameSettings = db.GameSettings.FirstOrDefault(x => x.GameId == game.Id);
             if (gameSettings == null)
-                throw new Exception("Настройки не найдена");
+                throw new Exception("Настройки не найдены");
 
+            //Создаем транзакцию
             var transactionBet = new UserTransactions()
             {
                 Date = DateTime.UtcNow,
-                PlayerGame = (int)game.Game,
+                Game = game.Games,
                 UsersId = user.Id
             };
+            //Используем специальные команды,чтобы не было никаких ошибок при оплате
             using (var transaction = db.Database.BeginTransaction())
             {
                 try
                 {
-
                     switch (game.Status)
                     {
                         case EnumStatusGame.Win:
@@ -65,7 +69,6 @@ namespace Casino.Services.Service
                             transactionBet.Type = EnumTypeTransaction.Loss;
                             transactionBet.Amount = game.AmountBet;
                             break;
-
                     }
                     db.UserTransactions.Add(transactionBet);
 
@@ -73,6 +76,7 @@ namespace Casino.Services.Service
                     transaction.Commit();
 
                 }
+                //При ошибке оплаты возвращает деньги 
                 catch (Exception ex)
                 {
                     transaction.Rollback();
@@ -86,7 +90,7 @@ namespace Casino.Services.Service
         /// </summary>
         /// <param name="userId">ид пользователя</param>
         /// <exception cref="Exception"></exception>
-        public void ReplenishmentBalance(TopUpBalanceRequest request)
+        public void ReplenishmentBalance(BaseUserIdReq<TopUpBalanceRequest> request)
         {
             var db = new CasinoDbContext(_options);
             var user = db.Users.FirstOrDefault(x => x.Id == request.UserId);
@@ -98,16 +102,13 @@ namespace Casino.Services.Service
                 Date = DateTime.UtcNow,
                 Type = EnumTypeTransaction.Replenishment,
                 UsersId = request.UserId,
-                Amount = request.Count
-
-
+                Amount = request.Request.Count
             };
             using (var transaction = db.Database.BeginTransaction())
             {
                 try
                 {
-                    user.Balance += request.Count;
-
+                    user.Balance += request.Request.Count;
                     db.UserTransactions.Add(transactionReplenishment);
                     db.SaveChanges();
                     transaction.Commit();
@@ -117,14 +118,11 @@ namespace Casino.Services.Service
                     transaction.Rollback();
                 }
             }
-
-
-
         }
         /// <summary>
-        /// Метод получения истории пользователя кол-во сыгранных игр, победы/проигрыши/ничьи, кол-во денег
+        /// Метод получения истории пользователя: кол-во сыгранных игр, победы/проигрыши/ничьи, кол-во денег
         /// </summary>
-        /// <param name="userId"></param>
+        /// <param name="userId">Ид пользователя</param>
         public BaseResponse<GetHistoryTransactionResponse> GetHistoryTransactions(int userId)
         {
             var db = new CasinoDbContext(_options);

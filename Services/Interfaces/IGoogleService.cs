@@ -1,7 +1,5 @@
 ﻿using Casino.Services.Models;
-using Casino.Services.Models.BlackjackGame.Response;
-using Casino.Services.Request.GoogleAuth;
-using Casino.Services.Request.Users;
+using Casino.Services.RequestResponse.GoogleAuth.Request;
 using System;
 using System.Collections.Generic;
 using System.Linq;

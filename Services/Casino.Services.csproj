@@ -14,8 +14,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="Logger.Extension" Version="8.0.1" />
 	  <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
 	  <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
+	  <PackageReference Include="Stripe.Extension" Version="8.0.1" />
 	  <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
 	</ItemGroup>
 

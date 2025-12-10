@@ -1,10 +1,6 @@
 ﻿using Casino.DataContext;
 using Casino.Services.Interfaces;
 using Casino.Services.Models;
-using Casino.Services.Models.BlackjackGame.Response;
-using Casino.Services.Models.UserService.Request;
-using Casino.Services.Models.UserService.Response;
-using Casino.Services.Request.Users;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Buffers.Text;
@@ -13,11 +9,12 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-
 using System.Drawing;
 using System.Reflection;
-using Casino.Services.Request.GoogleAuth;
 using Casino.DataContext.Enums;
+using Casino.Services.RequestResponse.Users.Request;
+using Casino.Services.RequestResponse.UserService.Request;
+using Casino.Services.RequestResponse.UserService.Response;
 
 namespace Casino.Services.Service
 {
@@ -70,37 +67,33 @@ namespace Casino.Services.Service
         /// <returns>Модель сессии</returns>
         public BaseResponse<UserSessionModel> Login(LoginRequest request)
         {
-        
-           
-                var passwordHash = CreateSHA256(request.Password);
-                using var db = new CasinoDbContext(_options);
-                var user = db.Users.FirstOrDefault(x => x.Email == request.Email && x.Password == passwordHash);
-                if (user == null)
-                    return new BaseResponse<UserSessionModel>("Пользователь не найден");
-                var dataClose = DateTime.UtcNow;
-                dataClose.AddHours(3);
-                var token = Guid.NewGuid();
-                var session = new UserSession
-                {
-                    UserId = user.Id,
-                    Token = token,
-                    DateCreate = DateTime.UtcNow,
-                    DateClose = dataClose
-                };
-                db.UserSessions.Add(session);
-                db.SaveChanges();
-                var response = new UserSessionModel
-                {
-                    Id = session.Id,
-                    Token = session.Token,
-                    DateClose = session.DateClose,
-                    DateCreate = session.DateCreate
-                };
-                return new BaseResponse<UserSessionModel>(response);
-            
-            
-
+            var passwordHash = CreateSHA256(request.Password);
+            using var db = new CasinoDbContext(_options);
+            var user = db.Users.FirstOrDefault(x => x.Email == request.Email && x.Password == passwordHash);
+            if (user == null)
+                return new BaseResponse<UserSessionModel>("Пользователь не найден");
+            var dataClose = DateTime.UtcNow;
+            dataClose.AddHours(3);
+            var token = Guid.NewGuid();
+            var session = new UserSession
+            {
+                UserId = user.Id,
+                Token = token,
+                DateCreate = DateTime.UtcNow,
+                DateClose = dataClose
+            };
+            db.UserSessions.Add(session);
+            db.SaveChanges();
+            var response = new UserSessionModel
+            {
+                Id = session.Id,
+                Token = session.Token,
+                DateClose = session.DateClose,
+                DateCreate = session.DateCreate
+            };
+            return new BaseResponse<UserSessionModel>(response);
         }
+
         /// <summary>
         /// Получить данные пользователя
         /// </summary>
@@ -128,7 +121,6 @@ namespace Casino.Services.Service
 
             return new BaseResponse<ShowUserDataResponse>(response);
         }
-      
 
         /// <summary>
         /// Изменить имя пользователя
@@ -145,18 +137,15 @@ namespace Casino.Services.Service
             db.SaveChanges();
 
             return new BaseResponse();
-            
-
         }
+
         /// <summary>
         /// Сохранить изображение пользователя (если картинка уже была и нужно изменить, тогда файл перезаписывается)
         /// </summary>
         /// <param name="request">Ид пользователя, закодированная строка изображения</param>
-        public BaseResponse SaveUserImage (BaseUserIdReq< SaveUserImageRequest> request)
+        public BaseResponse SaveUserImage(BaseUserIdReq<SaveUserImageRequest> request)
         {
-
             //преобразование изображения в битовый массив,а затем запись в файл
-            
             byte[] bytes = Convert.FromBase64String(request.Request.Image);
             string filePath = @$"D:,,,\\Image\Users\\{request.UserId}.png";
             var appDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -166,16 +155,39 @@ namespace Casino.Services.Service
             return new BaseResponse();
         }
 
+        /// <summary>
+        /// Получить список ид пользователей
+        /// </summary>
+        /// <param name="gameId">Ид игры</param>
+        /// <returns>Список ид пользователей</returns>
         public BaseResponse<List<int>> GetListUsersId(int gameId)
         {
             var db = new CasinoDbContext(_options);
-            var playerGames = db.PlayerGames.Where(x => x.Game == (EnumGames)gameId).ToList();
+            var userGames = db.UsersGames.Where(x=>x.GameId==gameId);
             var response = new List<int>();
-            foreach (var playerGame in playerGames)
+            foreach (var userGame in userGames)
             {
-                response.Add(playerGame.UserId);
+                var isUserIdInList = response.Exists(x => x == userGame.UserId);
+                if (!isUserIdInList)
+                    response.Add(userGame.UserId);
             }
             return new BaseResponse<List<int>>(response);
+        }
+
+        /// <summary>
+        /// Проверка равен баланс 0 или меньше
+        /// </summary>
+        /// <param name="userId">Ид пользователя</param>
+        /// <returns>да/нет</returns>
+        /// <exception cref="Exception"></exception>
+        public bool IsBalanceZero(int userId)
+        {
+            var db = new CasinoDbContext(_options);
+            var user = db.Users.Where(x => x.Id == userId).FirstOrDefault();
+            if (user != null) throw new Exception("Пользователь не найден");
+
+            if(user.Balance <=0) return true;
+            else return false;
         }
 
 
