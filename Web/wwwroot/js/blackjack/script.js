@@ -1,260 +1,329 @@
-// script.js — websocket + UI for BlackJack
-// Важно: DTO-формат сообщений — { Controller: "BlackJackGame", Method: "...", Value: { ... } }
+﻿// script.js — MULTIPLAYER BLACKJACK WITH REAL-TIME EVENTS
 
-// --- WebSocket connection (adapted from your uploaded scripts.js) ---
 function getCookie(name) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) {
-    return parts.pop().split(';').shift();
-  }
-  return null;
+    const v = `; ${document.cookie}`;
+    const parts = v.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";")[0];
+    return null;
 }
 
 let socket = null;
 let currentGame = null;
+let lastRenderedModel = null;
 
-function createWebSocket() {
-  // если нужен токен — используется cookie "Auth-Token" (как в примере)
-  const token = getCookie("Auth-Token");
-  // Если токена нет — всё равно можно попытаться подключиться к ws на том же хосте (без токена)
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const host = window.location.host;
-  let url = `${protocol}//${host}/ws`;
-  if (token) url += `?token=${encodeURIComponent(token)}`;
-
-  console.log("Connecting to WS:", url);
-  const s = new WebSocket(url);
-
-  s.onopen = () => {
-    setConnState("connected");
-    console.log("WS open");
-  };
-
-  s.onmessage = (ev) => {
-    try {
-      const data = JSON.parse(ev.data);
-      console.log("WS message", data);
-      // Ожидаем что сервер шлёт BaseResponse { IsSucces, ErrorMessage, Data }
-      handleBaseResponse(data);
-    } catch (e) {
-      console.warn("Failed parse ws message:", ev.data, e);
-    }
-  };
-
-  s.onclose = () => {
-    setConnState("closed");
-    console.log("WS closed");
-  };
-
-  s.onerror = (err) => {
-    setConnState("error");
-    console.error("WS err", err);
-  };
-
-  return s;
-}
+// ---------------------------
+// UI HELPERS
+// ---------------------------
 
 function setConnState(text) {
-  const el = document.getElementById("connState");
-  if (!el) return;
-  el.textContent = text;
-  if (text === "connected") el.style.color = "var(--accent)";
-  else if (text === "closed" || text === "error") el.style.color = "#ff8b8b";
-  else el.style.color = "";
+    const el = document.getElementById("connState");
+    if (!el) return;
+    el.textContent = text;
+    el.style.color =
+        text === "connected" ? "var(--accent)" :
+            text === "error" || text === "closed" ? "#ff6c6c" :
+                "#fff";
 }
 
-// start
-socket = createWebSocket();
-if (socket === null) setConnState("no-socket");
+function showToast(text, error = false) {
+    const t = document.getElementById("toast");
+    if (!t) return alert(text);
 
-// --- Helpers ---
-function sendMessage(controller, method, value) {
-  if (!socket || socket.readyState !== WebSocket.OPEN) {
-    showToast("Нет соединения с сервером", true);
-    return;
-  }
-  const msg = { Controller: controller, Method: method, Value: value };
-  socket.send(JSON.stringify(msg));
-  console.log("Send:", msg);
+    t.textContent = text;
+    t.className = "toast " + (error ? "error" : "success");
+    t.style.display = "block";
+
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.style.display = "none", 3000);
 }
 
-function showToast(text, isError = false, ms = 3000) {
-  const t = document.getElementById("toast");
-  t.textContent = text;
-  t.className = "toast " + (isError ? "error" : "success");
-  t.style.display = "block";
-  clearTimeout(t._to);
-  t._to = setTimeout(() => (t.style.display = "none"), ms);
+function addLog(text, color = "white") {
+    const box = document.getElementById("gameLog");
+    if (!box) return;
+
+    const div = document.createElement("div");
+    div.className = "log-entry";
+    div.style.color = color;
+    div.textContent = text;
+
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
 }
 
-function showModal(title, subtitle) {
-  const modal = document.getElementById("modal");
-  document.getElementById("modalMessage").textContent = title;
-  document.getElementById("modalSub").textContent = subtitle || "";
-  modal.style.display = "flex";
+function showModal(title, sub) {
+    const m = document.getElementById("modal");
+    if (!m) return;
+
+    document.getElementById("modalMessage").textContent = title;
+    document.getElementById("modalSub").textContent = sub || "";
+    m.style.display = "flex";
 }
 
 function hideModal() {
-  const modal = document.getElementById("modal");
-  modal.style.display = "none";
+    const m = document.getElementById("modal");
+    if (!m) return;
+    m.style.display = "none";
 }
 
-// --- Render cards ---
+// ---------------------------
+// CARD RENDER
+// ---------------------------
+
 function renderCard(card) {
     if (!card) return null;
 
-    const suitSymbols = ["♥", "♦", "♣", "♠"];
-    const suit = suitSymbols[card.Suit] ?? "?";
+    const suits = ["♥", "♦", "♣", "♠"];
+    const suit = suits[card.Suit] ?? "?";
 
-    const valueMap = {
+    const valMap = {
         2: "2", 3: "3", 4: "4", 5: "5",
         6: "6", 7: "7", 8: "8", 9: "9",
         10: "10", 11: "A"
     };
-    const val = valueMap[card.Value] ?? String(card.Value);
+    const val = valMap[card.Value] ?? card.Value;
 
-    const div = document.createElement("div");
-    div.className = "cardItem animate-card " + (suit === "♥" || suit === "♦" ? "card red" : "card black");
-    div.innerHTML = `
-    <div class="cardTop">${suit}</div>
-    <div class="cardCenter">${val}</div>
-    <div class="cardBottom">${suit}</div>
-  `;
+    const d = document.createElement("div");
+    d.className = "cardItem card " + (suit === "♥" || suit === "♦" ? "red" : "black");
+    d.style.position = "relative";
 
-    return div;
+    d.innerHTML = `
+        <div class="cardTop">${suit}</div>
+        <div class="cardCenter">${val}</div>
+        <div class="cardBottom">${suit}</div>
+    `;
+    return d;
 }
 
-function renderGameModel(model) {
+// ---------------------------
+// GAME RENDERING
+// ---------------------------
+
+function renderGame(model) {
+    if (!model) return;
+    lastRenderedModel = model;
     currentGame = model;
-    document.getElementById("currentGameId").textContent = model.GameId ?? "—";
 
-    const dealer = document.getElementById("dealerCards");
-    const player = document.getElementById("playerCards");
-    dealer.innerHTML = "";
-    player.innerHTML = "";
+    const idEl = document.getElementById("currentGameId");
+    if (idEl) idEl.textContent = model.GameId ?? "—";
 
-    (model.DealerCards || []).forEach(c => {
-        const el = renderCard(c);
-        dealer.appendChild(el);
-    });
+    // Render dealer
+    const dealerArea = document.getElementById("dealerCards");
+    if (dealerArea) dealerArea.innerHTML = "";
 
-    (model.PLayerCards || []).forEach(c => {
-        const el = renderCard(c);
-        player.appendChild(el);
-    });
-
-    // скрыть ставки если есть активная игра
-    if (model.Status === 0) {
-        document.getElementById("betSection").style.display = "none";
+    const dealer = (model.PLayerCards || []).find(p => p.IsDealer);
+    if (dealer && dealer.Cards) {
+        dealer.Cards.forEach(c => {
+            const card = renderCard(c);
+            if (card) dealerArea.appendChild(card);
+        });
     }
 
-    handleStatus(model.Status);
+    // Render all players
+    const playersArea = document.getElementById("playerCards");
+    if (playersArea) playersArea.innerHTML = "";
+
+    (model.PLayerCards || []).forEach(p => {
+        if (p.IsDealer) return;
+
+        const wrap = document.createElement("div");
+        wrap.className = "card";
+        wrap.style.padding = "10px";
+        wrap.style.margin = "10px";
+        wrap.style.width = "210px";
+
+        const title = document.createElement("div");
+        title.innerHTML = `<strong>Игрок ${p.UserId ?? "?"}</strong>`;
+        wrap.appendChild(title);
+
+        const score = document.createElement("div");
+        score.textContent = "Очки: " + p.Score;
+        wrap.appendChild(score);
+
+        const row = document.createElement("div");
+        row.style.display = "flex";
+        row.style.flexWrap = "wrap";
+        row.style.gap = "6px";
+
+        (p.Cards || []).forEach(c => {
+            const card = renderCard(c);
+            if (card) row.appendChild(card);
+        });
+
+        wrap.appendChild(row);
+        playersArea.appendChild(wrap);
+    });
+
+    // Show action buttons only for active player
+    updateButtons(model);
 }
 
-function handleStatus(statusRaw) {
-    const status = Number(statusRaw); // всегда число
+function updateButtons(model) {
+    const hit = document.getElementById("hitBtn");
+    const stand = document.getElementById("standBtn");
+    const newBtn = document.getElementById("newGameBtn");
 
+    hit.style.display = "none";
+    stand.style.display = "none";
+    newBtn.style.display = "none";
+
+    const myId = Number(getCookie("UserId"));
+    const me = (model.PLayerCards || []).find(p => p.UserId === myId);
+
+    if (me && me.StatusGame === 0) {
+        hit.style.display = "inline-flex";
+        stand.style.display = "inline-flex";
+    }
+
+    if (!me && model.Status !== 0) {
+        newBtn.style.display = "inline-flex";
+    }
+
+    if (model.Status === 1) {
+        showModal("Вы победили! 🎉");
+        newBtn.style.display = "inline-flex";
+    }
+    if (model.Status === 2) {
+        showModal("Вы проиграли!");
+        newBtn.style.display = "inline-flex";
+    }
+    if (model.Status === 3) {
+        showModal("Ничья!");
+        newBtn.style.display = "inline-flex";
+    }
+}
+
+// ---------------------------
+// WEBSOCKET SETUP
+// ---------------------------
+
+function createWs() {
+    const token = getCookie("Auth-Token");
+    const p = location.protocol === "https:" ? "wss:" : "ws:";
+    let url = `${p}//${location.host}/ws`;
+    if (token) url += `?token=${token}`;
+
+    let ws = new WebSocket(url);
+
+    ws.onopen = () => setConnState("connected");
+    ws.onclose = () => setConnState("closed");
+    ws.onerror = () => setConnState("error");
+
+    ws.onmessage = e => {
+        try {
+            const msg = JSON.parse(e.data);
+            handleIncoming(msg);
+        } catch (err) {
+            console.error("WS parse error:", err);
+        }
+    };
+
+    return ws;
+}
+
+socket = createWs();
+
+// ---------------------------
+// SEND MESSAGE
+// ---------------------------
+
+function sendMessage(controller, method, value) {
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+        showToast("Нет соединения", true);
+        return;
+    }
+    socket.send(JSON.stringify({ Controller: controller, Method: method, Value: value }));
+}
+
+// ---------------------------
+// INCOMING EVENTS HANDLER
+// ---------------------------
+
+function handleIncoming(msg) {
+    if (!msg) return;
+
+    const ctrl = msg.Controller;
+    const method = msg.Method;
+
+    // 🔵 1) Игрок подключился
+    if (ctrl === "GameWsController" && method === "ConnectAnotherPlayer") {
+        addLog(`Игрок ${msg.Value?.UserId} подключился`, "#37ff9b");
+        return;
+    }
+
+    // 🔴 2) Игрок отключился
+    if (ctrl === "GameWsController" && method === "DisconnectAnotherPlayer") {
+        addLog(`Игрок ${msg.Value?.UserId} отключился`, "#ff6c6c");
+        return;
+    }
+
+    // 🟡 3) Другой игрок берёт карту
+    if (ctrl === "BlackJackGameWsController" && method === "TurnAnotherPlayer") {
+        addLog(`Игрок ${msg.Value?.UserId} взял карту`, "#ffe16c");
+        return;
+    }
+
+    // 🟠 4) Другой игрок пропустил ход
+    if (ctrl === "BlackJackGameWsController" && method === "SkipAnotherPlayer") {
+        addLog(`Игрок ${msg.Value?.UserId} пропустил ход`, "#dfe7ff");
+        return;
+    }
+
+    // 🟢 5) Обычный ответ на любые игровые запросы
+    if (msg.IsSucces && msg.Data) {
+        renderGame(msg.Data);
+    }
+}
+
+// ---------------------------
+// DOM EVENTS
+// ---------------------------
+
+document.addEventListener("DOMContentLoaded", () => {
+    const startBtn = document.getElementById("startBtn");
+    const connectBtn = document.getElementById("connectBtn");
+    const disconnectBtn = document.getElementById("disconnectBtn");
     const hitBtn = document.getElementById("hitBtn");
     const standBtn = document.getElementById("standBtn");
     const newBtn = document.getElementById("newGameBtn");
+    const betSelect = document.getElementById("betSelect");
+    const maxPlayers = document.getElementById("maxPlayers");
 
-    hitBtn.style.display = "none";
-    standBtn.style.display = "none";
-    newBtn.style.display = "none";
+    // CREATE GAME
+    startBtn.onclick = () => {
+        sendMessage("GameWsController", "CreateGame", {
+            Game: 0,
+            Bet: Number(betSelect.value),
+            MaxCountPlayers: Number(maxPlayers.value)
+        });
+    };
 
-    if (status === 0) { // None
-        hitBtn.style.display = "inline-flex";
-        standBtn.style.display = "inline-flex";
-    } else if (status === 1) { // Win
-        showModal("Вы победили! 🎉", "Поздравляю — выигрыш зачислен.");
-        newBtn.style.display = "inline-flex";
-        document.getElementById("betSection").style.display = "block";
-    } else if (status === 2) { // Loss
-        showModal("Вы проиграли.", "Не повезло — можно попробовать снова.");
-        newBtn.style.display = "inline-flex";
-        document.getElementById("betSection").style.display = "block";
-    } else if (status === 3) { // Draw
-        showModal("Ничья.", "Ставка возвращена.");
-        newBtn.style.display = "inline-flex";
-        document.getElementById("betSection").style.display = "block";
-    }
-}
+    // CONNECT
+    connectBtn.onclick = () => {
+        const gid = Number(document.getElementById("currentGameId").textContent);
+        if (!gid) return showToast("Нет ID игры", true);
 
-// --- Handle server BaseResponse ---
-function handleBaseResponse(resp) {
-  // Expect object like { IsSucces: bool, ErrorMessage: string, Data: BlackJackGameModel }
-  // Field name in spec is IsSucces (без второго s) — используем именно её.
-  if (!resp) return;
-  const ok = resp.IsSucces === true;
-  if (!ok) {
-    const msg = resp.ErrorMessage || "Ошибка от сервера";
-    showToast(msg, true);
-    return;
-  }
-  const model = resp.Data;
-  if (!model) {
-    showToast("Пустая модель от сервера", true);
-    return;
-  }
-  renderGameModel(model);
-}
+        sendMessage("GameWsController", "ConnectPlayer", { gameId: gid });
+    };
 
-// --- UI wiring ---
-document.addEventListener("DOMContentLoaded", () => {
-  const startBtn = document.getElementById("startBtn");
-  const betSelect = document.getElementById("betSelect");
-  const hitBtn = document.getElementById("hitBtn");
-  const standBtn = document.getElementById("standBtn");
-  const newBtn = document.getElementById("newGameBtn");
-  const modalRestart = document.getElementById("modalRestart");
+    // DISCONNECT
+    disconnectBtn.onclick = () => {
+        const gid = Number(document.getElementById("currentGameId").textContent);
+        sendMessage("GameWsController", "DisconnectPlayer", { gameId: gid });
+    };
 
-  startBtn.addEventListener("click", () => {
-    const bet = Number(betSelect.value);
-    startBtn.classList.add("loading");
-    startBtn.disabled = true;
-    // Запрос: Controller "BlackJackGame", Method "StartGame", Value: { Bet: <number> }
-    sendMessage("BlackJackGame", "StartGame", { Bet: bet });
-    // Убираем индикацию через некоторое время (в случае, если ответ долго)
-    setTimeout(() => {
-      startBtn.classList.remove("loading");
-      startBtn.disabled = false;
-    }, 1200);
-  });
+    // TURN
+    hitBtn.onclick = () => {
+        sendMessage("BlackJackGameWsController", "TurnPlayer", {
+            gameId: currentGame?.GameId
+        });
+    };
 
-  hitBtn.addEventListener("click", () => {
-    if (!currentGame || !currentGame.GameId) {
-      showToast("Нет активной игры", true);
-      return;
-    }
-    // TurnPlayer expects Value: { GameId }
-    sendMessage("BlackJackGame", "TurnPlayer", { GameId: currentGame.GameId });
-  });
+    // SKIP
+    standBtn.onclick = () => {
+        sendMessage("BlackJackGameWsController", "SkipPlayer", {
+            gameId: currentGame?.GameId
+        });
+    };
 
-  // "Пропустить" — метод на сервере не указан в ТЗ, делаю best-effort: вызываю "SkipPlayer"
-  // Если на сервере другой метод — можно изменить на "Stand" или "SkipTurn"
-  standBtn.addEventListener("click", () => {
-    if (!currentGame || !currentGame.GameId) {
-      showToast("Нет активной игры", true);
-      return;
-    }
-    // Мы будем вызывать метод "SkipPlayer"
-    sendMessage("BlackJackGame", "SkipPlayer", { GameId: currentGame.GameId });
-  });
-
-  newBtn.addEventListener("click", () => {
-    hideModal();
-    // Сбрасываем UI, оставляем возможность выбрать новую ставку
-    document.getElementById("dealerCards").innerHTML = "";
-    document.getElementById("playerCards").innerHTML = "";
-    document.getElementById("currentGameId").textContent = "—";
-    currentGame = null;
-    showToast("Готово к новой игре");
-  });
-
-  modalRestart.addEventListener("click", () => {
-    hideModal();
-    // emulate new game button click
-    document.getElementById("newGameBtn").click();
-  });
+    newBtn.onclick = () => location.reload();
 });
