@@ -1,4 +1,4 @@
-﻿namespace Casino.Web.WebSockets
+﻿namespace Casino.Web.WebSockets.Models
 {
     using Microsoft.AspNetCore.Mvc;
 

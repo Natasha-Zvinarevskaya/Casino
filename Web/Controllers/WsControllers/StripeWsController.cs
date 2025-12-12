@@ -2,7 +2,7 @@
 using Casino.Services.Models;
 using Casino.Services.RequestResponse.StripeUserService.Request;
 using Casino.Services.RequestResponse.UserTransactionService.Request;
-using Casino.Web.WebSockets;
+using Casino.Web.WebSockets.Models;
 using Microsoft.AspNetCore.Mvc;
 using Stripe.Extension.Interfaces;
 using Stripe.Extension.Models.StripePaymentServices.Request;

@@ -15,6 +15,7 @@ using Microsoft.VisualBasic;
 using Logger.Extension.Client.Interface;
 using Logger.Extension.Client.Models.Enums;
 using Logger.Extension.Client;
+using Casino.Web.WebSockets.Models;
 
 namespace Casino.Web.WebSockets
 {

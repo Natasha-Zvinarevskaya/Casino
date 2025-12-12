@@ -3,7 +3,7 @@ using Casino.Services.Models;
 using Casino.Services.RequestResponse.PlayerGameService.Request;
 using Casino.Services.Service;
 using Casino.Web.Middleware;
-using Casino.Web.WebSockets;
+using Casino.Web.WebSockets.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR.Protocol;
 

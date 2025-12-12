@@ -1,5 +1,6 @@
 ﻿using Casino.DataContext;
 using Casino.Web.Middleware;
+using Casino.Web.WebSockets.Models;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
 using System.Net.WebSockets;

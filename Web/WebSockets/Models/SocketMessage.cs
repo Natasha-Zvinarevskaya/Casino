@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace Casino.Web.WebSockets
+namespace Casino.Web.WebSockets.Models
 {
 
     public class SocketMessage

@@ -1,4 +1,4 @@
-﻿namespace Casino.Web.WebSockets
+﻿namespace Casino.Web.WebSockets.Models
 {
     public class SendMessageRequest
     {

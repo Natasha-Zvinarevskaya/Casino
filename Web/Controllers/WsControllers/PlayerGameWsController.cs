@@ -2,7 +2,7 @@
 using Casino.Services.Interfaces;
 using Casino.Services.Models;
 using Casino.Services.RequestResponse.PlayerGameService.Request;
-using Casino.Web.WebSockets;
+using Casino.Web.WebSockets.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Casino.Web.Controllers.WsControllers

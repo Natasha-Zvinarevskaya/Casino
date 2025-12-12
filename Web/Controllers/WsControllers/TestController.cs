@@ -1,5 +1,4 @@
-﻿using Casino.Web.WebSockets;
-
+﻿using Casino.Web.WebSockets.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Casino.Web.Controllers.WsControllers

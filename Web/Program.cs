@@ -23,6 +23,7 @@ using Stripe.Extension.Interfaces;
 using Stripe.Extension.Services;
 using Casino.Services.RequestResponse.GoogleAuth.Request;
 using Casino.Services.RequestResponse.UserSessionService.Response;
+using Casino.Web.WebSockets.Models;
 
 
 namespace Web
