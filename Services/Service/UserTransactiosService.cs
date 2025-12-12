@@ -27,17 +27,17 @@ namespace Casino.Services.Service
         /// </summary>
         /// <param name="gameId">Ид игры</param>
         /// <exception cref="Exception"></exception>
-        public void EndGameTransaction(int gameId,int userId)
+        public void EndGameTransaction(BaseUserIdReq<int> request)
         {
             //Находим сыгранную игру и пользователя
             var db = new CasinoDbContext(_options);
-            var userGame = db.UsersGames.FirstOrDefault(x=>x.GameId == gameId && x.UserId == userId);
+            var userGame = db.UsersGames.FirstOrDefault(x=>x.GameId == request.Request && x.UserId == request.UserId);
             if (userGame == null)
                 throw new Exception("Пользовательская игра не найдена.");
             
-            var game = db.Games.FirstOrDefault(x => x.Id == gameId );
+            var game = db.Games.FirstOrDefault(x => x.Id == request.Request );
             
-            var user = db.Users.FirstOrDefault(x => x.Id == userId);
+            var user = db.Users.FirstOrDefault(x => x.Id == request.UserId);
             
 
             //Находим настройки для определения коэффициента выигрыша/проигрыша
@@ -123,10 +123,10 @@ namespace Casino.Services.Service
         /// Метод получения истории пользователя: кол-во сыгранных игр, победы/проигрыши/ничьи, кол-во денег
         /// </summary>
         /// <param name="userId">Ид пользователя</param>
-        public BaseResponse<GetHistoryTransactionResponse> GetHistoryTransactions(int userId)
+        public BaseResponse<GetHistoryTransactionResponse> GetHistoryTransactions(GetHistoryTransactionsRequest request)
         {
             var db = new CasinoDbContext(_options);
-            var userTransactions = db.UserTransactions.Where(x => x.UsersId == userId).ToList();
+            var userTransactions = db.UserTransactions.Where(x => x.UsersId == request.UserId).ToList();
             if (userTransactions == null)
                 throw new Exception("Пользователь не найден.");
 

@@ -17,7 +17,7 @@ namespace Casino.Services.Interfaces
         BaseResponse<ShowUserDataResponse> GetUserData(int userId);
         BaseResponse ChangeUserName(BaseUserIdReq<ChangeUserNameRequest> request);
         BaseResponse SaveUserImage(BaseUserIdReq<SaveUserImageRequest> request);
-        BaseResponse<List<int>> GetListUsersId(int gameId);
+        BaseResponse<List<int>> GetListUsersId(BaseGameIdReq req);
 
 
 

@@ -15,6 +15,7 @@ using Casino.DataContext.Enums;
 using Casino.Services.RequestResponse.Users.Request;
 using Casino.Services.RequestResponse.UserService.Request;
 using Casino.Services.RequestResponse.UserService.Response;
+using Casino.Services.RequestResponse.UserTransactionService.Request;
 
 namespace Casino.Services.Service
 {
@@ -106,7 +107,7 @@ namespace Casino.Services.Service
             var user = db.Users.FirstOrDefault(x => x.Id == userId);
             if (user == null)
                 throw new Exception("Пользователь не найден.");
-            var historyTransactions = _userTransactionService.GetHistoryTransactions(userId);
+            var historyTransactions = _userTransactionService.GetHistoryTransactions(new GetHistoryTransactionsRequest { UserId = userId });
             var response = new ShowUserDataResponse { Email = user.Email, Name = user.Name, Balance = user.Balance, HistoryTransaction = historyTransactions.Data };
             if (File.Exists($"\\Image\\Users\\{userId}.png"))
             {
@@ -160,10 +161,10 @@ namespace Casino.Services.Service
         /// </summary>
         /// <param name="gameId">Ид игры</param>
         /// <returns>Список ид пользователей</returns>
-        public BaseResponse<List<int>> GetListUsersId(int gameId)
+        public BaseResponse<List<int>> GetListUsersId(BaseGameIdReq req)
         {
             var db = new CasinoDbContext(_options);
-            var userGames = db.UsersGames.Where(x=>x.GameId==gameId);
+            var userGames = db.UsersGames.Where(x=>x.GameId==req.GameId);
             var response = new List<int>();
             foreach (var userGame in userGames)
             {

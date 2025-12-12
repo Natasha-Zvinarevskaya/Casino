@@ -1,4 +1,5 @@
 ﻿using Casino.Services.Interfaces;
+using Casino.Services.Models;
 using Casino.Services.RequestResponse.PlayerGameService.Request;
 using Casino.Test.Helpers;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,7 +25,7 @@ namespace Casino.Test.ServicesTest
             var userId = 1;
 
             //Act
-            var result = playerGameService.ConnectPlayer(userId, gameId);
+            var result = playerGameService.ConnectPlayer(new BaseUserIdReq <int> (userId, gameId));
 
             //Assert
             Assert.Equal(true, result.IsSucces);
@@ -42,7 +43,7 @@ namespace Casino.Test.ServicesTest
             var userId = 1;
 
             //Act
-            var result = playerGameService.DisconnectPlayer(userId, gameId);
+            var result = playerGameService.DisconnectPlayer(new BaseUserIdReq<int>(userId, gameId));
 
             //Assert
             Assert.Equal(true, result.IsSucces);
@@ -55,7 +56,7 @@ namespace Casino.Test.ServicesTest
             var service = ServerProviderTests.GetServerProvider();
             var playerGameService = service.GetService<IPlayerGameService>();
 
-            var request = new StartGameRequest() { Game = 1, Bet = 100, MaxCountPlayers = 3 };
+            var request = new StartGameRequest() { Game = DataContext.Enums.EnumGames.BlackJack, Bet = 100, MaxCountPlayers = 3 };
 
             //Act
             var result = playerGameService.StartGame(request);

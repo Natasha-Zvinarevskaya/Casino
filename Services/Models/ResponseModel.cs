@@ -6,15 +6,11 @@ using System.Threading.Tasks;
 
 namespace Casino.Services.Models
 {
-   public  class BaseUserIdReq <T>
+    public class ResponseModel
     {
-        public BaseUserIdReq(int userId, T request)
-        {
-            UserId = userId;
-            Request = request;
-        }
-
         public int UserId { get; set; }
-        public T? Request { get; set; }
+        public string? Controller { get; set; }
+        public string? Method { get; set; }
+        public string Value { get; set; }
     }
 }

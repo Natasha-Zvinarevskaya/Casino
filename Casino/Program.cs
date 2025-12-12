@@ -1,4 +1,5 @@
-﻿using Casino.Services;
+﻿using Casino.DataContext.Enums;
+using Casino.Services;
 using Casino.Services.Interfaces;
 using Casino.Services.RequestResponse.BlackjackGame.Requests;
 using Casino.Services.RequestResponse.PlayerGameService.Request;
@@ -28,7 +29,7 @@ namespace Casino
 
                 Console.WriteLine("Выберите игру из списка и введите ее номер: \n1. Блэкджек.");
                 var answerUser = Convert.ToInt32(Console.ReadLine());
-                var request = new StartGameRequest() {  Game = answerUser };
+                var request = new StartGameRequest() {  Game = EnumGames.BlackJack};
                 var gameId = playerGameService.StartGame(request);
 
                 new BlackjackGameService(playerGameService).Play(new BlackjackPlayRequest() { });//GameId = gameId });

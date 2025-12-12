@@ -18,12 +18,14 @@ namespace Casino.Services.Service
 {
     public class PlayerGameService : IPlayerGameService
     {
-        private IUserTransactionService _userService;
+        private IUserTransactionService _userTransactionService;
         private DbContextOptions<CasinoDbContext> _options;
-        public PlayerGameService(IUserTransactionService userService, DbContextOptions<CasinoDbContext> options)
+        private IUserService _userService;
+        public PlayerGameService(IUserTransactionService userTransactionService, DbContextOptions<CasinoDbContext> options, IUserService userService)
         {
-            _userService = userService;
+            _userTransactionService = userTransactionService;
             _options = options;
+            _userService = userService;
         }
 
         //ToDo:InitGame,то же что и старт, только без пользователей,
@@ -46,11 +48,11 @@ namespace Casino.Services.Service
             var game = new Game()
             {
                 Date = DateTime.UtcNow,
-                Games = (EnumGames)request.Game,
+                Games = request.Game,
                 GameSettings = new GameSettings() { AmountWin = 2, MaxCountPlayers = request.MaxCountPlayers },
                 AmountBet = request.Bet,
                 Status = EnumStatusGame.WaitingPlayers,
-             
+
             };
 
             db.Games.Add(game);
@@ -83,7 +85,7 @@ namespace Casino.Services.Service
                 game.Status = request.ResultGame;
                 db.SaveChanges();
 
-                _userService.EndGameTransaction(game.Id, request.UserId);
+                _userTransactionService.EndGameTransaction(new BaseUserIdReq<int>(request.UserId, game.Id));
 
             }
         }
@@ -141,17 +143,17 @@ namespace Casino.Services.Service
         /// </summary>
         /// <param name="userId">Ид пользователя</param>
         /// <param name="gameId">Ид игры</param>
-        public BaseResponse ConnectPlayer(int userId, int gameId)
+        public BaseResponse ConnectPlayer(BaseUserIdReq<int> request)
         {
             var db = new CasinoDbContext(_options);
-            var userGame = db.UsersGames;
-            userGame.Add(new UsersGame { GameId =  gameId , UserId = userId});
-            var game = db.Games.FirstOrDefault(x => x.Id == gameId);
-            var gameSettings = db.GameSettings.FirstOrDefault(x => x.GameId == gameId);
+            db.UsersGames.Add(new UsersGame { GameId = request.Request, UserId = request.UserId });
+            var game = db.Games.FirstOrDefault(x => x.Id == request.Request);
+            var gameSettings = db.GameSettings.FirstOrDefault(x => x.GameId == request.Request);
             //Сделать проверку на максимальное кол-во пользователей
-            if (game.UsersGames.Count == gameSettings.MaxCountPlayers )
+            if (game.UsersGames.Count == gameSettings.MaxCountPlayers)
                 game.Status = EnumStatusGame.ReadyToGame;
             db.SaveChanges();
+
             return new BaseResponse();
         }
         /// <summary>
@@ -159,15 +161,15 @@ namespace Casino.Services.Service
         /// </summary>
         /// <param name="userId">Ид пользователя</param>
         /// <param name="gameId">Ид игры</param>
-        public BaseResponse DisconnectPlayer(int userId, int gameId)
+        public BaseResponse DisconnectPlayer(BaseUserIdReq<int> request)
         {
             var db = new CasinoDbContext(_options);
-            var userGame = db.UsersGames.FirstOrDefault(x => x.GameId == gameId && x.UserId == userId);
-            if ( userGame == null)
+            var userGame = db.UsersGames.FirstOrDefault(x => x.GameId == request.Request && x.UserId == request.UserId);
+            if (userGame == null)
             {
                 throw new Exception("Пользовательская игра не найдена.");
             }
-            var game = db.Games.FirstOrDefault(x=>x.Id == gameId);
+            var game = db.Games.FirstOrDefault(x => x.Id == request.Request);
             if (game.Status == EnumStatusGame.ReadyToGame)
                 throw new Exception("Невозможно выйти при активной игре.");
             else
@@ -177,24 +179,26 @@ namespace Casino.Services.Service
             }
             return new BaseResponse();
         }
+
         /// <summary>
         /// Создание новой игры
         /// </summary>
         /// <param name="request">Ид пользователя, выбранная игра и сумма ставки </param>
-        public void CreateGame(BaseUserIdReq<StartGameRequest> request)
+        public CreateGameResponce CreateGame(BaseUserIdReq<StartGameRequest> request)
         {
             var gameId = StartGame(request.Request);
-            ConnectPlayer(request.UserId, gameId);
+            // ConnectPlayer(new BaseUserIdReq<int>(request.UserId, gameId));
+            return (new CreateGameResponce {GameId =  gameId });
         }
         /// <summary>
         /// Проверка все ли пользователи подключились к игре
         /// </summary>
         /// <param name="gameId"></param>
         /// <returns></returns>
-        public bool IsGameReady (int gameId)
+        public bool IsGameReady(BaseGameIdReq req)
         {
             var db = new CasinoDbContext(_options);
-            var game = db.Games.FirstOrDefault(x=>x.Id == gameId);
+            var game = db.Games.FirstOrDefault(x => x.Id == req.GameId);
             if (game.Status == EnumStatusGame.ReadyToGame)
                 return true;
             return false;

@@ -66,7 +66,7 @@ namespace Casino.Web.WebSockets
                     return;
                 }
 
-                var controllerName = ctrlEl.GetString() ?? string.Empty;
+                    var controllerName = ctrlEl.GetString() ?? string.Empty;
                 var methodName = methodEl.GetString() ?? string.Empty;
 
                 // Находим тип контроллера: имя + "Controller"

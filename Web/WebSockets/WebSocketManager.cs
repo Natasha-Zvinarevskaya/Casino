@@ -1,7 +1,10 @@
 ﻿using Casino.DataContext;
+using Casino.Web.Middleware;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
 using System.Net.WebSockets;
+using System.Text;
+using System.Text.Json;
 
 namespace Casino.Web.WebSockets
 {
@@ -39,6 +42,75 @@ namespace Casino.Web.WebSockets
             //Пробует найти сокет по значению, если находит то создает новую переменную юзерИд, которую мы отправляем обратно
             //if (_connections.TryGetValue(socket, out var userId) == null)-получить пользователя
             _connections.TryRemove(socket, out _);
+        }
+
+        /// <summary>
+        /// Отправляет одному подключенному пользователю
+        /// </summary>
+        /// <param name="request"></param>
+        public void SendMessageToUser(SendMessageRequest request)
+        {
+            var sockets = _connections.Keys;
+
+            var valueJson = JsonSerializer.Serialize(request.Value);
+
+
+            foreach (var connection in _connections)
+            {
+                var user = connection.Value;
+                if (user.UserId == request.CurrentUserId)
+                {
+                    var pushMessage = new NotificationRequest
+                    {
+                        Controller = request.Controller,
+                        Method = request.Method,
+                        Value = valueJson,
+                    };
+                    string json = JsonSerializer.Serialize(pushMessage);
+                    var buffer = Encoding.UTF8.GetBytes(json);
+                    var segment = new ArraySegment<byte>(buffer);
+                    connection.Key.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
+
+                }
+
+            }
+
+        }
+        /// <summary>
+        /// Отправляет всем подключенным пользователям
+        /// </summary>
+        /// <param name="request"></param>
+        public void SendMessageAllUsers(SendMessageRequest request)
+        {
+            var sockets = _connections.Keys;
+
+            var valueJson = JsonSerializer.Serialize(request.Value);
+
+
+            foreach (var connection in _connections)
+            {
+                var user = connection.Value;
+                foreach (var userId in request.UserIds)
+                {
+                    if (user.UserId != userId)
+                    {
+                        var pushMessage = new NotificationRequest
+                        {
+                            Controller = request.Controller,
+                            Method = request.Method,
+                            Value = valueJson,
+                        };
+                        string json = JsonSerializer.Serialize(pushMessage);
+                        var buffer = Encoding.UTF8.GetBytes(json);
+                        var segment = new ArraySegment<byte>(buffer);
+                        connection.Key.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
+
+                    }
+                }
+
+
+            }
+
         }
     }
 }

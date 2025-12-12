@@ -16,10 +16,10 @@ namespace Casino.Services.Interfaces
         void EndGame(EndGameRequest request);
         void SaveGameHistory(SaveGameHistoryRequest request);
         GetHistoryResponse GetHistory(GetHistoryRequest request);
-        BaseResponse ConnectPlayer(int userId, int gameId);
-        BaseResponse DisconnectPlayer(int userId, int gameId);
-        void CreateGame(BaseUserIdReq<StartGameRequest> request);
-        bool IsGameReady(int gameId);
+        BaseResponse ConnectPlayer(BaseUserIdReq<int> request);
+        BaseResponse DisconnectPlayer(BaseUserIdReq<int> request);
+        CreateGameResponce CreateGame(BaseUserIdReq<StartGameRequest> request);
+        bool IsGameReady(BaseGameIdReq req);
 
 
     }

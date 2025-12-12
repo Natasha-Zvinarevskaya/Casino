@@ -1,4 +1,5 @@
 ﻿using Casino.DataContext;
+using Casino.Services.RequestResponse.UserTransactionService.Request;
 using Casino.Services.Service;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -20,7 +21,7 @@ namespace Casino.Test.ServicesTest
             int userId = 1;
 
             //Act
-            var result = service.GetHistoryTransactions(userId);
+            var result = service.GetHistoryTransactions(new GetHistoryTransactionsRequest { UserId = userId });
 
             //Assert 
             Assert.Equal(3, result.Data.CountWins);

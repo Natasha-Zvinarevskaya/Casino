@@ -193,19 +193,19 @@ namespace Casino.Services.Service
         /// <param name="gameId"></param>
         /// <param name="userId"></param>
         /// <returns></returns> 
-        public BaseResponse<BlackJackGameModel> Turn(int gameId, int? userId)
+        public BaseResponse<BlackJackGameModel> Turn(TurnPlayerRequest request) 
         {
-            var gameHistory = _playerGameService.GetHistory(new GetHistoryRequest { GameId = gameId });
+            var gameHistory = _playerGameService.GetHistory(new GetHistoryRequest { GameId =request.GameId});
             Deck deck = new Deck();
             deck.HistoryDeck(gameHistory.CardsHistory.Deck);
             List<PlayerModel> players = gameHistory.CardsHistory.Players;
 
-            players.FirstOrDefault(x => x.UserId == userId).Cards.Add(deck.DealCard()); 
+            players.FirstOrDefault(x => x.UserId == request.UserId).Cards.Add(deck.DealCard()); 
             
 
-            var saveGameHistoryRequest = new SaveGameHistoryRequest { Deck = deck.GetCards(), PlayersHands = players, GameId = gameId };
+            var saveGameHistoryRequest = new SaveGameHistoryRequest { Deck = deck.GetCards(), PlayersHands = players, GameId = request.GameId };
             _playerGameService.SaveGameHistory(saveGameHistoryRequest);
-            var blackjackGameModel = new BlackJackGameModel { GameId = gameId, Status = EnumStatusGame.None, PLayerCards = players };
+            var blackjackGameModel = new BlackJackGameModel { GameId = request.GameId, Status = EnumStatusGame.None, PLayerCards = players };
             return new BaseResponse<BlackJackGameModel>(blackjackGameModel);
         }
         ///// <summary>
@@ -237,28 +237,28 @@ namespace Casino.Services.Service
         /// <param name="gameId"> Ид игры</param>
         /// <param name="userId">Юзер Ид</param>
         /// <returns></returns>
-        public BaseResponse<BlackJackGameModel> SkipPlayer(int gameId)
+        public BaseResponse<BlackJackGameModel> SkipPlayer(BaseGameIdReq req)
         {
-            var gameHistory = _playerGameService.GetHistory(new GetHistoryRequest { GameId = gameId });
+            var gameHistory = _playerGameService.GetHistory(new GetHistoryRequest { GameId = req.GameId });
             Deck deck = new Deck();
             deck.HistoryDeck(gameHistory.CardsHistory.Deck);
             var saveGameHistoryRequest = new SaveGameHistoryRequest()
             {
                 Deck = deck.GetCards(),
                 PlayersHands = gameHistory.CardsHistory.Players,
-                GameId = gameId,
+                GameId = req.GameId,
                 PlayersSkiped = gameHistory.PlayersSkiped + 1
             };
             _playerGameService.SaveGameHistory(saveGameHistoryRequest);
 
             if (saveGameHistoryRequest.PlayersSkiped == gameHistory.CardsHistory.Players.Count)
             {
-                var dealerTurn = Turn(gameId, null);
-                var requestGameOver = DetermineWinner( new DetermineWinnerRequest { GameId = gameId });
+                var dealerTurn = Turn(new TurnPlayerRequest { GameId = req.GameId, UserId = null });
+                var requestGameOver = DetermineWinner( new DetermineWinnerRequest { GameId = req.GameId });
                 return new BaseResponse<BlackJackGameModel>(requestGameOver.Data);
             }
 
-            var request = new BlackJackGameModel { GameId = gameId, Status = EnumStatusGame.None, PLayerCards = gameHistory.CardsHistory.Players};
+            var request = new BlackJackGameModel { GameId = req.GameId, Status = EnumStatusGame.None, PLayerCards = gameHistory.CardsHistory.Players};
             return new BaseResponse<BlackJackGameModel>(request);
         }
 
@@ -419,7 +419,7 @@ namespace Casino.Services.Service
                                 loser.StatusGame = EnumStatusGame.Loss;
                             }
                         }
-                        //Объединяем 2 спискаобратно в players и для каждого игрока проверяем не дилер ли он и заканчиваем игру
+                        //Объединяем 2 списка обратно в players и для каждого игрока проверяем не дилер ли он и заканчиваем игру
                         players = winners.Union(losers).ToList();
 
                         foreach (var player in players)
