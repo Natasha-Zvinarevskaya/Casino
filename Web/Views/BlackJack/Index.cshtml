@@ -1,100 +1,81 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-	Layout = null;
+﻿@{
+    ViewData["Title"] = "Blackjack Multiplayer";
 }
 
+<link rel="stylesheet" href="~/css/style.css" />
 
-<!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>BlackJack — WebSocket</title>
-    <link rel="stylesheet" href="/css/blackjack/style.css" />
-</head>
-<body>
-    <div class="bg"></div>
+<div class="container">
 
-    <div class="container">
-        <div class="brand">
-            <div class="logo">BJ</div>
-            <h1>BlackJack <span>Live</span></h1>
-        </div>
+    <h2 class="title">Blackjack – Multiplayer</h2>
 
-        <div class="card">
-            <div style="display:flex;justify-content:flex-end;align-items:center;gap:12px;">
-                <div id="betSection" style="width: 100%;">
-                    <div>
-                    <div style="font-weight:700">Ставка</div>
-                    <div class="field" style="margin:8px 0 0;">
-                            <select id="betSelect" style="    max-width: 120px;padding:10px;border-radius:10px;background:#071126;border:1px solid #ffffff14;color:#fff;">
-                            <option value="10">10</option>
-                            <option value="50">50</option>
-                            <option value="100" selected>100</option>
-                            <option value="500">500</option>
-                            <option value="1000">1000</option>
-                        </select>
-                        <div style="margin-top:8px;">
-                            <button id="startBtn" class="btn primary">
-                                <span class="btn-text">Старт игры</span>
-                                <span class="spinner" aria-hidden="true"></span>
-                            </button>
-                        </div>
-                        </div>
-                    </div>
-                </div>
+    <div class="conn">
+        WebSocket: <span id="connState">connecting...</span>
+    </div>
 
-                <div style="min-width: 200px;">
-                    <div class="status" id="connectionStatus">Соединение: <strong id="connState">...</strong></div>
-                    <div class="hint" style="margin-top:6px">GameId: <span id="currentGameId">—</span></div>
-                </div>
-            </div>
+    <!-- GAME LOG (для событий: кто вошёл, кто вышел, кто взял карту, кто пропустил) -->
+    <div class="section card">
+        <h3>События игры</h3>
+        <div id="gameLog" class="log-box"></div>
+    </div>
 
-            <hr style="opacity:.06;margin:16px 0;">
+    <!-- GAME CREATION SECTION -->
+    <div id="betSection" class="section card">
+        <h3>Создать игру</h3>
 
-            <!-- Game area -->
-            <div id="gameArea">
-                <div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-                    <div style="flex:1;min-width:260px">
-                        <div style="font-weight:700;margin-bottom:8px">Дилер</div>
-                        <div id="dealerCards" style="display:flex;gap:8px;flex-wrap:wrap"></div>
-                    </div>
+        <label>Ставка</label>
+        <select id="betSelect" class="input">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+        </select>
 
-                    <div style="flex:1;min-width:260px">
-                        <div style="font-weight:700;margin-bottom:8px">Игрок</div>
-                        <div id="playerCards" style="display:flex;gap:8px;flex-wrap:wrap"></div>
-                    </div>
-                </div>
+        <label>Максимум игроков</label>
+        <input id="maxPlayers" type="number" class="input" min="1" max="10" value="2">
 
-                <div id="controls" style="margin-top:18px; display:flex; gap:12px;">
-                    <button id="hitBtn" class="btn" style="display:none">Взять карту</button>
-                    <button id="standBtn" class="btn" style="display:none">Пропустить</button>
-                    <button id="newGameBtn" class="btn primary" style="display:none">Играть ещё</button>
-                </div>
+        <button id="startBtn" class="btn full">Создать игру</button>
+    </div>
 
-                <div class="hint" style="margin-top:12px">Подсказка: сервер отвечает моделью <code>BaseResponse</code> с <code>Data</code> типа <code>BlackJackGameModel</code>.</div>
-            </div>
+    <!-- CONNECT / DISCONNECT -->
+    <div class="section card">
+        <h3>Подключение</h3>
 
-            <div class="footnote">Версия UI — WebSocket demo</div>
+        <div>ID игры: <span id="currentGameId">—</span></div>
+
+        <button id="connectBtn" class="btn">Подключиться</button>
+        <button id="disconnectBtn" class="btn">Отключиться</button>
+    </div>
+
+    <!-- GAME AREA -->
+    <div id="gameArea" class="section card">
+
+        <h3>Стол дилера</h3>
+        <div id="dealerCards" class="cards-row"></div>
+
+        <h3>Игроки</h3>
+        <div id="playerCards" class="players-grid"></div>
+
+        <div class="actions">
+            <button id="hitBtn" class="btn action">Взять карту</button>
+            <button id="standBtn" class="btn action">Пропустить ход</button>
+            <button id="newGameBtn" class="btn">Новая игра</button>
         </div>
     </div>
 
-    <!-- Modal -->
-    <div id="modal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:60;">
-        <div style="background:linear-gradient(180deg,#071029,#041020);padding:22px;border-radius:14px;box-shadow:0 30px 80px #000a;width:90%;max-width:420px;text-align:center;">
-            <div id="modalMessage" style="font-size:18px;font-weight:800;margin-bottom:12px"></div>
-            <div id="modalSub" style="color:var(--muted);margin-bottom:16px"></div>
-            <div style="display:flex;justify-content:center;gap:10px;">
-                <button id="modalRestart" class="btn primary">Начать заново</button>
-            </div>
-        </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <h2 id="modalMessage"></h2>
+        <p id="modalSub"></p>
+
+        <button id="modalRestart" class="btn full">Ок</button>
     </div>
+</div>
 
-    <!-- Toast -->
-    <div id="toast" class="toast" style="display:none"></div>
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
 
-    <script src="js/blackjack/script.js"></script>
-</body>
-</html>
+<script src="~/js/script.js"></script>
