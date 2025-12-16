@@ -186,9 +186,9 @@ namespace Casino.Services.Service
             });
 
             //Пополняем баланс пользователя в игре на введенную сумму
-            _userTransactionService.ReplenishmentBalance(request);
+            var response = _userTransactionService.ReplenishmentBalance(request);
 
-            return new BaseResponse();
+            return response;
         }
     }
 }

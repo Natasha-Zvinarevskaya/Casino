@@ -74,7 +74,7 @@ namespace Casino.Services.Service
         /// Конец игры. Добавлем данные о времени окончания игры и результатов
         /// </summary>
         /// <param name="request">Результат игры, игра</param>
-        public void EndGame(EndGameRequest request)
+        public BaseResponse EndGame(EndGameRequest request)
         {
             {
                 var db = new CasinoDbContext(_options);
@@ -85,8 +85,8 @@ namespace Casino.Services.Service
                 game.Status = request.ResultGame;
                 db.SaveChanges();
 
-                _userTransactionService.EndGameTransaction(new BaseUserIdReq<int>(request.UserId, game.Id));
-
+                var response = _userTransactionService.EndGameTransaction(new BaseUserIdReq<int>(request.UserId, game.Id));
+                return response;
             }
         }
         /// <summary>
@@ -96,7 +96,7 @@ namespace Casino.Services.Service
         public void SaveGameHistory(SaveGameHistoryRequest request)
         {
             var db = new CasinoDbContext(_options);
-            var historyModel = new CardsHistoryJson { Deck = request.Deck, Players = request.PlayersHands, PlayersSkiped = request.PlayersSkiped };
+            var historyModel = new CardsHistoryJson { Deck = request.Deck, Players = request.PlayersHands };
             string historyModelJson = JsonSerializer.Serialize(historyModel);
             var gameHistory = db.GameHistory.FirstOrDefault(x => x.GameId == request.GameId);
             if (gameHistory == null)
@@ -143,18 +143,27 @@ namespace Casino.Services.Service
         /// </summary>
         /// <param name="userId">Ид пользователя</param>
         /// <param name="gameId">Ид игры</param>
-        public BaseResponse ConnectPlayer(BaseUserIdReq<int> request)
+        public BaseResponse<EnumStatusGame> ConnectPlayer(BaseUserIdReq<int> request)
         {
             var db = new CasinoDbContext(_options);
+            var user = db.UsersGames.FirstOrDefault(x=>x.UserId == request.UserId && x.GameId == request.Request);
+            if (user != null)
+                throw new Exception("Пользователь уже подключен к игре.");
             db.UsersGames.Add(new UsersGame { GameId = request.Request, UserId = request.UserId });
             var game = db.Games.FirstOrDefault(x => x.Id == request.Request);
+            if (game == null)
+                throw new Exception("Игра не найдена.");
             var gameSettings = db.GameSettings.FirstOrDefault(x => x.GameId == request.Request);
             //Сделать проверку на максимальное кол-во пользователей
             if (game.UsersGames.Count == gameSettings.MaxCountPlayers)
+            {
                 game.Status = EnumStatusGame.ReadyToGame;
+                db.SaveChanges();
+                return new BaseResponse<EnumStatusGame>(EnumStatusGame.ReadyToGame);
+            }
             db.SaveChanges();
 
-            return new BaseResponse();
+            return new BaseResponse<EnumStatusGame>(EnumStatusGame.WaitingPlayers);
         }
         /// <summary>
         /// Отключение пользователя от игры 
@@ -188,21 +197,19 @@ namespace Casino.Services.Service
         {
             var gameId = StartGame(request.Request);
             // ConnectPlayer(new BaseUserIdReq<int>(request.UserId, gameId));
-            return (new CreateGameResponce {GameId =  gameId });
+            return (new CreateGameResponce { GameId = gameId });
         }
-        /// <summary>
-        /// Проверка все ли пользователи подключились к игре
-        /// </summary>
-        /// <param name="gameId"></param>
-        /// <returns></returns>
-        public bool IsGameReady(BaseGameIdReq req)
-        {
-            var db = new CasinoDbContext(_options);
-            var game = db.Games.FirstOrDefault(x => x.Id == req.GameId);
-            if (game.Status == EnumStatusGame.ReadyToGame)
-                return true;
-            return false;
-        }
+        ///// <summary>
+        ///// Проверка все ли пользователи подключились к игре
+        ///// </summary>
+        ///// <param name="gameId"></param>
+        ///// <returns></returns>
+        //public EnumStatusGame IsGameReady(IsGameReadyRequest req)
+        //{
+        //    var db = new CasinoDbContext(_options);
+        //    var game = db.Games.FirstOrDefault(x => x.Id == req.GameId);
+        //    return game.Status;
+        //}
 
 
     }

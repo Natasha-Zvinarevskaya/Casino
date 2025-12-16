@@ -14,7 +14,7 @@ namespace Casino.Services.Interfaces
     {
         BaseResponse<BlackJackGameModel> Play(BlackjackPlayRequest request);
         BaseResponse<BlackJackGameModel> Turn(TurnPlayerRequest request);
-        BaseResponse<BlackJackGameModel> SkipPlayer(BaseGameIdReq req);
+        BaseResponse<BlackJackGameModel> SkipPlayer(SkipPlayerRequest req);
 
 
 

@@ -14,6 +14,6 @@ namespace Casino.Services.RequestResponse.PlayerGameService.Request
         public List<PlayerModel> PlayersHands { get; set; }
        // public List<Card> DealerHand { get; set; }
         public int GameId { get; set; }
-        public int PlayersSkiped { get; set; }
+       // public int PlayersSkiped { get; set; }
     }
 }

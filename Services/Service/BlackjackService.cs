@@ -200,8 +200,12 @@ namespace Casino.Services.Service
             deck.HistoryDeck(gameHistory.CardsHistory.Deck);
             List<PlayerModel> players = gameHistory.CardsHistory.Players;
 
-            players.FirstOrDefault(x => x.UserId == request.UserId).Cards.Add(deck.DealCard()); 
-            
+            var index = players.FindIndex(x=>x.UserId == request.UserId);
+            players[index].Cards.Add(deck.DealCard());
+            if (players[index].Score>21)
+            {
+                players[index].StatusGame = EnumStatusGame.WaitingEndGame;
+            }
 
             var saveGameHistoryRequest = new SaveGameHistoryRequest { Deck = deck.GetCards(), PlayersHands = players, GameId = request.GameId };
             _playerGameService.SaveGameHistory(saveGameHistoryRequest);
@@ -237,7 +241,7 @@ namespace Casino.Services.Service
         /// <param name="gameId"> Ид игры</param>
         /// <param name="userId">Юзер Ид</param>
         /// <returns></returns>
-        public BaseResponse<BlackJackGameModel> SkipPlayer(BaseGameIdReq req)
+        public BaseResponse<BlackJackGameModel> SkipPlayer(SkipPlayerRequest req)
         {
             var gameHistory = _playerGameService.GetHistory(new GetHistoryRequest { GameId = req.GameId });
             Deck deck = new Deck();
@@ -247,17 +251,25 @@ namespace Casino.Services.Service
                 Deck = deck.GetCards(),
                 PlayersHands = gameHistory.CardsHistory.Players,
                 GameId = req.GameId,
-                PlayersSkiped = gameHistory.PlayersSkiped + 1
+                //PlayersSkiped = gameHistory.PlayersSkiped + 1
             };
             _playerGameService.SaveGameHistory(saveGameHistoryRequest);
 
-            if (saveGameHistoryRequest.PlayersSkiped == gameHistory.CardsHistory.Players.Count)
+            //if (saveGameHistoryRequest.PlayersSkiped == gameHistory.CardsHistory.Players.Count)
+            //{
+            //    var dealerTurn = Turn(new TurnPlayerRequest { GameId = req.GameId, UserId = null });
+            //    var requestGameOver = DetermineWinner( new DetermineWinnerRequest { GameId = req.GameId });
+            //    return new BaseResponse<BlackJackGameModel>(requestGameOver.Data);
+            //}
+
+            List<PlayerModel> players = gameHistory.CardsHistory.Players;
+            var waitingPlayers = players.Where(x=>x.StatusGame==EnumStatusGame.WaitingEndGame).Select(x=>x.StatusGame).ToList();
+            if(waitingPlayers.Count==players.Count-1)
             {
                 var dealerTurn = Turn(new TurnPlayerRequest { GameId = req.GameId, UserId = null });
-                var requestGameOver = DetermineWinner( new DetermineWinnerRequest { GameId = req.GameId });
+                var requestGameOver = DetermineWinner(new DetermineWinnerRequest { GameId = req.GameId });
                 return new BaseResponse<BlackJackGameModel>(requestGameOver.Data);
             }
-
             var request = new BlackJackGameModel { GameId = req.GameId, Status = EnumStatusGame.None, PLayerCards = gameHistory.CardsHistory.Players};
             return new BaseResponse<BlackJackGameModel>(request);
         }

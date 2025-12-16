@@ -25,8 +25,8 @@ namespace Casino.Web.Controllers.WsControllers
         /// <returns></returns>
         public BaseResponse TopUpBalance(BaseUserIdReq<TopUpBalanceRequest> request)
         {
-            _userTransactionService.ReplenishmentBalance(request);
-            return new BaseResponse ();
+           var response= _userTransactionService.ReplenishmentBalance(request);
+            return response;
 
         }
     }

@@ -70,6 +70,7 @@ namespace Casino.Services.Service
         {
             var passwordHash = CreateSHA256(request.Password);
             using var db = new CasinoDbContext(_options);
+            var test = db.Database.GetConnectionString();
             var user = db.Users.FirstOrDefault(x => x.Email == request.Email && x.Password == passwordHash);
             if (user == null)
                 return new BaseResponse<UserSessionModel>("Пользователь не найден");
@@ -161,17 +162,10 @@ namespace Casino.Services.Service
         /// </summary>
         /// <param name="gameId">Ид игры</param>
         /// <returns>Список ид пользователей</returns>
-        public BaseResponse<List<int>> GetListUsersId(BaseGameIdReq req)
+        public BaseResponse<List<int>> GetListUsersId(GetListUsersIdsRequest req)
         {
             var db = new CasinoDbContext(_options);
-            var userGames = db.UsersGames.Where(x=>x.GameId==req.GameId);
-            var response = new List<int>();
-            foreach (var userGame in userGames)
-            {
-                var isUserIdInList = response.Exists(x => x == userGame.UserId);
-                if (!isUserIdInList)
-                    response.Add(userGame.UserId);
-            }
+            var response = db.UsersGames.Where(x=>x.GameId==req.GameId).Select(x=>x.UserId).ToList();
             return new BaseResponse<List<int>>(response);
         }
 

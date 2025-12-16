@@ -27,7 +27,7 @@ namespace Casino.Services.Service
         /// </summary>
         /// <param name="gameId">Ид игры</param>
         /// <exception cref="Exception"></exception>
-        public void EndGameTransaction(BaseUserIdReq<int> request)
+        public BaseResponse EndGameTransaction(BaseUserIdReq<int> request)
         {
             //Находим сыгранную игру и пользователя
             var db = new CasinoDbContext(_options);
@@ -74,12 +74,14 @@ namespace Casino.Services.Service
 
                     db.SaveChanges();
                     transaction.Commit();
+                    return new BaseResponse();
 
                 }
                 //При ошибке оплаты возвращает деньги 
                 catch (Exception ex)
                 {
                     transaction.Rollback();
+                    return new BaseResponse("Ошибка транзакции.");
                 }
 
             }
@@ -90,7 +92,7 @@ namespace Casino.Services.Service
         /// </summary>
         /// <param name="userId">ид пользователя</param>
         /// <exception cref="Exception"></exception>
-        public void ReplenishmentBalance(BaseUserIdReq<TopUpBalanceRequest> request)
+        public BaseResponse ReplenishmentBalance(BaseUserIdReq<TopUpBalanceRequest> request)
         {
             var db = new CasinoDbContext(_options);
             var user = db.Users.FirstOrDefault(x => x.Id == request.UserId);
@@ -112,10 +114,12 @@ namespace Casino.Services.Service
                     db.UserTransactions.Add(transactionReplenishment);
                     db.SaveChanges();
                     transaction.Commit();
+                    return new BaseResponse();
                 }
                 catch (Exception ex)
                 {
                     transaction.Rollback();
+                    return new BaseResponse("Ошибка транзакции.");
                 }
             }
         }

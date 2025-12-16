@@ -1,6 +1,9 @@
-﻿using Casino.Services.Interfaces;
+﻿using Casino.DataContext;
+using Casino.Services.Interfaces;
 using Casino.Services.Models;
+using Casino.Services.Models.Notifications;
 using Casino.Services.RequestResponse.PlayerGameService.Request;
+using Casino.Services.RequestResponse.UserService.Request;
 using Casino.Services.Service;
 using Casino.Web.Middleware;
 using Casino.Web.WebSockets.Models;
@@ -31,10 +34,9 @@ namespace Casino.Web.Controllers.WsControllers
         /// </summary>
         /// <param name="gameId"></param>
         /// <returns></returns>
-        public List<int> GetUsersIds(BaseGameIdReq req)
+        public List<int> GetUsersIds(GetListUsersIdsRequest req)
         {
-            var userIds = _userService.GetListUsersId(new BaseGameIdReq(req.GameId));
-
+            var userIds = _userService.GetListUsersId(new GetListUsersIdsRequest { GameId = req.GameId });
             return userIds.Data;
         }
         /// <summary>
@@ -42,50 +44,42 @@ namespace Casino.Web.Controllers.WsControllers
         /// </summary>
         /// <param name="gameId">ид игры</param>
         /// <returns></returns>
-        public BaseResponse ConnectPlayer(BaseGameIdReq req)
+        public BaseResponse ConnectPlayer(GetListUsersIdsRequest req)
         {
-            _playerGameService.ConnectPlayer(new BaseUserIdReq<int>(User.UserId, req.GameId));
-            var userIds = _userService.GetListUsersId(new BaseGameIdReq(req.GameId));
+           var response = _playerGameService.ConnectPlayer(new BaseUserIdReq<int>(User.UserId, req.GameId));
 
-            _webSocketManager.SendMessageToUser(new SendMessageRequest
+            var userIds = _userService.GetListUsersId(new GetListUsersIdsRequest { GameId = req.GameId });
+            _webSocketManager.SendMessageSelectedUsers(new SendMessageRequest<ConnectPlayerNotification>
             {
                 CurrentUserId = User.UserId,
                 UserIds = userIds.Data,
                 Controller = nameof(GameWsController),
                 Method = nameof(ConnectAnotherPlayer),
-                Value = $"Connect Another Player. Id:{User.UserId}"
+                Value = new ConnectPlayerNotification { UserId = User.UserId}
             });
-
-
-            //if (_playerGameService.IsGameReady(new BaseGameIdReq(req.GameId)))
-            //{
-
-            //}
-            return new BaseResponse();
+            return response;
         }
         /// <summary>
         /// Отключение игрока от игры
         /// </summary>
         /// <param name="gameId"></param>
         /// <returns></returns>
-        public BaseResponse DisconnectPlayer(BaseGameIdReq req)
+        public BaseResponse DisconnectPlayer(GetListUsersIdsRequest req)
         {
 
-            _playerGameService.DisconnectPlayer(new BaseUserIdReq<int>(User.UserId, req.GameId));
+           var response = _playerGameService.DisconnectPlayer(new BaseUserIdReq<int>(User.UserId, req.GameId));
 
-            var userIds = _userService.GetListUsersId(new BaseGameIdReq(req.GameId));
-
-
-            _webSocketManager.SendMessageAllUsers(new SendMessageRequest
+            var userIds = _userService.GetListUsersId(new GetListUsersIdsRequest { GameId = req.GameId });
+            _webSocketManager.SendMessageSelectedUsers(new SendMessageRequest <DisconnectPlayerNotification>
             {
                 CurrentUserId = User.UserId,
                 UserIds = userIds.Data,
                 Controller = nameof(GameWsController),
                 Method = nameof(DisconnectAnotherPlayer),
-                Value = $"DisconnectAnotherPlayer{User.UserId}."
+                Value = new DisconnectPlayerNotification { UserId = User.UserId}
             });
 
-            return new BaseResponse();
+            return response;
         }
         /// <summary>
         /// Создание новой игры
@@ -94,11 +88,17 @@ namespace Casino.Web.Controllers.WsControllers
         /// <returns></returns>
         public CreateGameResponce CreateGame(StartGameRequest request)
         {
-            //_webSocketManager.SendMessageToUser(User.UserId, new NotificationRequest { Controller = nameof(GameWsController), Method = nameof(CreateGame), Value = $"Игра создана." });
-
             var gameId = _playerGameService.CreateGame(new BaseUserIdReq<StartGameRequest>(User.UserId, request));
-
+            _webSocketManager.SendMessageAllUsers(new SendMessageRequest<CreateGameNotification>
+            {
+                CurrentUserId = User.UserId,
+              
+                Controller = nameof(GameWsController),
+                Method = nameof(CreateGame),
+                Value = new CreateGameNotification { GameId = gameId.GameId }
+            });
             return (gameId);
+          
         }
         public BaseResponse DisconnectAnotherPlayer()
         {

@@ -1,4 +1,5 @@
 ﻿using Casino.DataContext;
+using Casino.DataContext.Enums;
 using Casino.Services.Models;
 using Casino.Services.RequestResponse.PlayerGameService.Request;
 using Casino.Services.RequestResponse.PlayerGameService.Response;
@@ -13,13 +14,13 @@ namespace Casino.Services.Interfaces
     public interface IPlayerGameService
     {
         int StartGame(StartGameRequest request);
-        void EndGame(EndGameRequest request);
+        BaseResponse EndGame(EndGameRequest request);
         void SaveGameHistory(SaveGameHistoryRequest request);
         GetHistoryResponse GetHistory(GetHistoryRequest request);
-        BaseResponse ConnectPlayer(BaseUserIdReq<int> request);
+        BaseResponse<EnumStatusGame> ConnectPlayer(BaseUserIdReq<int> request);
         BaseResponse DisconnectPlayer(BaseUserIdReq<int> request);
         CreateGameResponce CreateGame(BaseUserIdReq<StartGameRequest> request);
-        bool IsGameReady(BaseGameIdReq req);
+       // EnumStatusGame IsGameReady(IsGameReadyRequest req);   
 
 
     }

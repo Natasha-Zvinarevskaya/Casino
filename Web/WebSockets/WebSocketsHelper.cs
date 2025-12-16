@@ -16,13 +16,14 @@ using Logger.Extension.Client.Interface;
 using Logger.Extension.Client.Models.Enums;
 using Logger.Extension.Client;
 using Casino.Web.WebSockets.Models;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 
 namespace Casino.Web.WebSockets
 {
     public class WebSocketsHelper
     {
         // ----------------- Вспомогательные методы -----------------
-       
+
         public static async Task<string?> ReceiveStringAsync(WebSocket socket, CancellationToken ct)
         {
 
@@ -48,12 +49,18 @@ namespace Casino.Web.WebSockets
             string messageJson,
             CancellationToken ct,
             string token,
-            ILoggerService loggerService)
+            ILoggerService loggerService
+            )
         {
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             Exception exception = null;
             var dateStart = DateTime.UtcNow;
             string argsBodys = "";
+
+
+            var controllerName = "";
+            var methodName = "";
+
             try
             {
                 var doc = JsonDocument.Parse(messageJson);
@@ -67,8 +74,8 @@ namespace Casino.Web.WebSockets
                     return;
                 }
 
-                    var controllerName = ctrlEl.GetString() ?? string.Empty;
-                var methodName = methodEl.GetString() ?? string.Empty;
+                controllerName = ctrlEl.GetString() ?? string.Empty;
+                methodName = methodEl.GetString() ?? string.Empty;
 
                 // Находим тип контроллера: имя + "Controller"
                 var targetTypeName = controllerName.EndsWith("Controller", StringComparison.OrdinalIgnoreCase)
@@ -157,11 +164,11 @@ namespace Casino.Web.WebSockets
                 var invokeResult = method.Invoke(controllerInstance, args);
                 if (args != null)
                     argsBodys = JsonSerializer.Serialize(args);
-           
+
                 else throw new Exception("args = null");
 
 
-
+                var response = new SocketMessage<object> { Controller = controllerName, Method = methodName, Value = invokeResult };
                 // Если метод возвращает Task / Task<T>
                 if (invokeResult is Task task)
                 {
@@ -183,12 +190,14 @@ namespace Casino.Web.WebSockets
                 else
                 {
                     // Синхронный результат
-                    await SendSocketResponse(socket, invokeResult, ct);
+                    //await SendSocketResponse(socket, invokeResult, ct);
+                    await SendSocketResponse(socket, response, ct);
                 }
             }
             catch (Exception ex)
             {
-                await SendSocketResponse(socket, new { error = ex.Message, stack = ex.StackTrace }, ct);
+
+                await SendSocketResponse(socket, new {Controller = controllerName, Method = methodName, error = ex.Message, stack = ex.StackTrace }, ct);
                 exception = ex;
 
             }
@@ -205,7 +214,7 @@ namespace Casino.Web.WebSockets
                     if (exception != null)
                     {
                         logLevel = EnumLevelId.Error;
-                        
+
                     }
                     var loggerRequst = new Logger.Extension.Client.Models.LogRequest(EnumType.WebSocket, logLevel, "WebSocket")
                         .SetRequestBody(argsBodys)
@@ -256,8 +265,8 @@ namespace Casino.Web.WebSockets
                     //string jsonMessage = JsonSerializer.Serialize(messageRequest);
                     //var wsClient = new WsClient();
                     //wsClient.SendMessage(jsonMessage);
-                     
-                    
+
+
                 }
                 catch (Exception ex)
                 {
@@ -287,6 +296,7 @@ namespace Casino.Web.WebSockets
             }
 
         }
+
     }
 }
 

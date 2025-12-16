@@ -38,7 +38,11 @@ namespace Casino.DataContext.Enums
         /// <summary>
         /// Конец игры
         /// </summary>
-        GameOver
+        GameOver,
+        /// <summary>
+        /// Ожидание конца игры
+        /// </summary>
+        WaitingEndGame
 
 
     }

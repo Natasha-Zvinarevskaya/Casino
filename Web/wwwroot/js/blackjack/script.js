@@ -210,6 +210,8 @@ function createWs() {
 
     ws.onmessage = e => {
         try {
+            console.log(e.data);
+
             const msg = JSON.parse(e.data);
             handleIncoming(msg);
         } catch (err) {
@@ -245,7 +247,7 @@ function handleIncoming(msg) {
     const method = msg.Method;
 
     // 🔵 1) Игрок подключился
-    if (ctrl === "GameWsController" && method === "ConnectAnotherPlayer") {
+     if (ctrl === "GameWsController" && method === "ConnectAnotherPlayer") {
         addLog(`Игрок ${msg.Value?.UserId} подключился`, "#37ff9b");
         return;
     }
@@ -267,7 +269,12 @@ function handleIncoming(msg) {
         addLog(`Игрок ${msg.Value?.UserId} пропустил ход`, "#dfe7ff");
         return;
     }
+    if (ctrl === "GameWsController" && method === "CreateGame") {
+        addLog(`Игра создалась`, "#dfe7ff");
+        renderGame(msg.Value);
 
+        return;
+    }
     // 🟢 5) Обычный ответ на любые игровые запросы
     if (msg.IsSucces && msg.Data) {
         renderGame(msg.Data);
@@ -324,6 +331,10 @@ document.addEventListener("DOMContentLoaded", () => {
             gameId: currentGame?.GameId
         });
     };
-
-    newBtn.onclick = () => location.reload();
+    newBtn.onclick = () => {
+        sendMessage("BlackJackGameWsController", "StartGame", {
+            gameId: currentGame?.GameId
+        });
+    };
+    
 });

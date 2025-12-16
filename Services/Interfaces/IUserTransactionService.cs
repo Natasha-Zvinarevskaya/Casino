@@ -12,8 +12,8 @@ namespace Casino.Services.Interfaces
 {
     public interface IUserTransactionService
     {
-        void EndGameTransaction(BaseUserIdReq<int> request);
-        void ReplenishmentBalance(BaseUserIdReq<TopUpBalanceRequest> request);
+        BaseResponse EndGameTransaction(BaseUserIdReq<int> request);
+        BaseResponse ReplenishmentBalance(BaseUserIdReq<TopUpBalanceRequest> request);
         BaseResponse<GetHistoryTransactionResponse> GetHistoryTransactions(GetHistoryTransactionsRequest request);
 
 
