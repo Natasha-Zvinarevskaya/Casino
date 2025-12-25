@@ -15,10 +15,10 @@ namespace Casino.Services.RequestResponse.BlackjackGame.Requests
         /// <summary>
         /// Сумма ставки
         /// </summary>
-        public decimal Bet { get; set; }
+      //  public decimal Bet { get; set; }
         /// <summary>
         /// Список Ид пользователей
         /// </summary>
-        public List<int> UserIds { get; set; }
+      //  public List<int> UserIds { get; set; }
     }
 }

@@ -10,7 +10,7 @@ function getCookie(name) {
 let socket = null;
 let currentGame = null;
 let lastRenderedModel = null;
-
+let userId = 0;
 // ---------------------------
 // UI HELPERS
 // ---------------------------
@@ -166,29 +166,31 @@ function updateButtons(model) {
     stand.style.display = "none";
     newBtn.style.display = "none";
 
-    const myId = Number(getCookie("UserId"));
+    const myId = userId;
     const me = (model.PLayerCards || []).find(p => p.UserId === myId);
 
     if (me && me.StatusGame === 0) {
         hit.style.display = "inline-flex";
         stand.style.display = "inline-flex";
     }
-
     if (!me && model.Status !== 0) {
         newBtn.style.display = "inline-flex";
     }
 
-    if (model.Status === 1) {
-        showModal("Вы победили! 🎉");
-        newBtn.style.display = "inline-flex";
-    }
-    if (model.Status === 2) {
-        showModal("Вы проиграли!");
-        newBtn.style.display = "inline-flex";
-    }
-    if (model.Status === 3) {
-        showModal("Ничья!");
-        newBtn.style.display = "inline-flex";
+    if (model.Status == 1 || model.Status == 2 || model.Status == 3) {
+  
+        if (me.StatusGame === 1) {
+            showModal("Вы победили! 🎉");
+            newBtn.style.display = "inline-flex";
+        }
+        if (me.StatusGame === 2) {
+            showModal("Вы проиграли!");
+            newBtn.style.display = "inline-flex";
+        }
+        if (me.StatusGame === 3) {
+            showModal("Ничья!");
+            newBtn.style.display = "inline-flex";
+        }
     }
 }
 
@@ -204,7 +206,11 @@ function createWs() {
 
     let ws = new WebSocket(url);
 
-    ws.onopen = () => setConnState("connected");
+    ws.onopen = function () {
+        setConnState("connected");
+        sendMessage("UserWsController", "ShowUserData");
+
+    }
     ws.onclose = () => setConnState("closed");
     ws.onerror = () => setConnState("error");
 
@@ -247,7 +253,7 @@ function handleIncoming(msg) {
     const method = msg.Method;
 
     // 🔵 1) Игрок подключился
-     if (ctrl === "GameWsController" && method === "ConnectAnotherPlayer") {
+    if (ctrl === "GameWsController" && method === "ConnectAnotherPlayer") {
         addLog(`Игрок ${msg.Value?.UserId} подключился`, "#37ff9b");
         return;
     }
@@ -260,19 +266,46 @@ function handleIncoming(msg) {
 
     // 🟡 3) Другой игрок берёт карту
     if (ctrl === "BlackJackGameWsController" && method === "TurnAnotherPlayer") {
-        addLog(`Игрок ${msg.Value?.UserId} взял карту`, "#ffe16c");
+        addLog(`Игрок ${msg.Value?.Data.UserId} взял карту`, "#ffe16c");
         return;
     }
 
     // 🟠 4) Другой игрок пропустил ход
     if (ctrl === "BlackJackGameWsController" && method === "SkipAnotherPlayer") {
-        addLog(`Игрок ${msg.Value?.UserId} пропустил ход`, "#dfe7ff");
+        addLog(`Игрок ${msg.Value?.Data.UserId} пропустил ход`, "#dfe7ff");
         return;
     }
+    //Игра создана
     if (ctrl === "GameWsController" && method === "CreateGame") {
         addLog(`Игра создалась`, "#dfe7ff");
         renderGame(msg.Value);
 
+        return;
+    }
+    //Игра началась
+    if (ctrl === "BlackJackGameWsController" && method === "StartGame") {
+        addLog(`Игра началась`, "#dfe7ff");
+        renderGame(msg.Value.Data);
+
+        return;
+    }
+    //Получение ИД игрока
+    if (ctrl === "UserWsController" && method === "ShowUserData") {
+        addLog(`{Получение UserId}`, "#dfe7ff");
+        userId = msg.Value.Data.UserId;
+
+        return;
+    }
+    //Ход текущего игрока
+    if (ctrl === "BlackJackGameWsController" && method === "TurnPlayer") {
+        addLog(`Игрок ${msg.Value?.Data.UserId} взял карту`, "#ffe16c");
+        renderGame(msg.Value.Data.Request);
+        return;
+    }
+    //Пропуск хода текущего игрока
+    if (ctrl === "BlackJackGameWsController" && method === "SkipPlayer") {
+        addLog(`Игрок ${msg.Value?.Data.UserId} пропустил ход`, "#dfe7ff");
+        renderGame(msg.Value.Data.Request);
         return;
     }
     // 🟢 5) Обычный ответ на любые игровые запросы
@@ -294,6 +327,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const newBtn = document.getElementById("newGameBtn");
     const betSelect = document.getElementById("betSelect");
     const maxPlayers = document.getElementById("maxPlayers");
+    const modalRestartBtn = document.getElementById("modalRestart");
+
 
     // CREATE GAME
     startBtn.onclick = () => {
@@ -333,8 +368,10 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     newBtn.onclick = () => {
         sendMessage("BlackJackGameWsController", "StartGame", {
-            gameId: currentGame?.GameId
+            gameId: currentGame?.GameId,
         });
     };
-    
+    modalRestartBtn.onclick = () => {
+        location.reload();
+    }
 });

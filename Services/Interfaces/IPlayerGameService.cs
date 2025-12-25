@@ -20,7 +20,7 @@ namespace Casino.Services.Interfaces
         BaseResponse<EnumStatusGame> ConnectPlayer(BaseUserIdReq<int> request);
         BaseResponse DisconnectPlayer(BaseUserIdReq<int> request);
         CreateGameResponce CreateGame(BaseUserIdReq<StartGameRequest> request);
-       // EnumStatusGame IsGameReady(IsGameReadyRequest req);   
+        EnumStatusGame IsGameReady(IsGameReadyRequest req);   
 
 
     }

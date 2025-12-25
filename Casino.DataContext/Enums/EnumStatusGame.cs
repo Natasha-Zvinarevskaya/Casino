@@ -16,13 +16,13 @@ namespace Casino.DataContext.Enums
         /// </summary>
         None,
         /// <summary>
-        /// Победа
+        /// Победа дилера
         /// </summary>
-        Win,
+        DealerWin,
         /// <summary>
-        /// Проигрыш
+        /// Победа игрока
         /// </summary>
-        Loss,
+        DealerLoss,
         /// <summary>
         /// Ничья 
         /// </summary>
@@ -34,15 +34,10 @@ namespace Casino.DataContext.Enums
         /// <summary>
         /// Готово к игре
         /// </summary>
-        ReadyToGame,
-        /// <summary>
-        /// Конец игры
-        /// </summary>
-        GameOver,
-        /// <summary>
-        /// Ожидание конца игры
-        /// </summary>
-        WaitingEndGame
+        ReadyToGame
+        
+
+
 
 
     }

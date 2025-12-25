@@ -12,7 +12,7 @@ namespace Casino.DataContext
         public int Id { get; set; }
         public decimal Amount { get; set; } 
         public int UserId { get; set; }
-        public EnumStatus Status { get; set; }
+        public EnumStatusTransaction Status { get; set; }
     
         public DateTime Date {  get; set; }
 

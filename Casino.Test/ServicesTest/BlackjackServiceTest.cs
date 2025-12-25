@@ -24,7 +24,7 @@ namespace Casino.Test.ServicesTest
 
 
             List<int> userIds = [3, 4];
-            BlackjackPlayRequest request = new BlackjackPlayRequest() { UserIds = userIds, Bet = 100, GameId = 1};
+            BlackjackPlayRequest request = new BlackjackPlayRequest() {  GameId = 1};
            
 
             //Act 
@@ -44,7 +44,7 @@ namespace Casino.Test.ServicesTest
 
 
             List<int> userIds = [3, 4];
-            BlackjackPlayRequest request = new BlackjackPlayRequest() { UserIds = userIds, Bet = 100, GameId = 1 };
+            BlackjackPlayRequest request = new BlackjackPlayRequest() { GameId = 1 };
 
 
             //Act 

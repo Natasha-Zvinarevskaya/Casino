@@ -4,6 +4,7 @@ using Casino.Services.Interfaces;
 using Casino.Services.Models;
 using Casino.Services.RequestResponse.PlayerGameService.Request;
 using Casino.Services.RequestResponse.PlayerGameService.Response;
+using Casino.Services.RequestResponse.UserTransactionService.Request;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Query.Internal;
@@ -85,8 +86,12 @@ namespace Casino.Services.Service
                 game.Status = request.ResultGame;
                 db.SaveChanges();
 
-                var response = _userTransactionService.EndGameTransaction(new BaseUserIdReq<int>(request.UserId, game.Id));
-                return response;
+                foreach (var player in request.Players)
+                {
+                    _userTransactionService.EndGameTransaction(new EndGameTransactionRequest() { UserId = player.UserId, GameId = game.Id, StatusGame = player.StatusGame });
+
+                }
+                return new BaseResponse();
             }
         }
         /// <summary>
@@ -146,22 +151,27 @@ namespace Casino.Services.Service
         public BaseResponse<EnumStatusGame> ConnectPlayer(BaseUserIdReq<int> request)
         {
             var db = new CasinoDbContext(_options);
-            var user = db.UsersGames.FirstOrDefault(x=>x.UserId == request.UserId && x.GameId == request.Request);
+            var user = db.UsersGames.FirstOrDefault(x => x.UserId == request.UserId && x.GameId == request.Request);
             if (user != null)
                 throw new Exception("Пользователь уже подключен к игре.");
             db.UsersGames.Add(new UsersGame { GameId = request.Request, UserId = request.UserId });
             var game = db.Games.FirstOrDefault(x => x.Id == request.Request);
             if (game == null)
                 throw new Exception("Игра не найдена.");
+            db.SaveChanges();
+
+            var countUsers = db.UsersGames.Where(x => x.GameId == request.Request).Select(x => x.UserId).ToList();
+
+
             var gameSettings = db.GameSettings.FirstOrDefault(x => x.GameId == request.Request);
             //Сделать проверку на максимальное кол-во пользователей
-            if (game.UsersGames.Count == gameSettings.MaxCountPlayers)
+            if (countUsers.Count == gameSettings.MaxCountPlayers)
             {
                 game.Status = EnumStatusGame.ReadyToGame;
                 db.SaveChanges();
                 return new BaseResponse<EnumStatusGame>(EnumStatusGame.ReadyToGame);
             }
-            db.SaveChanges();
+
 
             return new BaseResponse<EnumStatusGame>(EnumStatusGame.WaitingPlayers);
         }
@@ -199,17 +209,26 @@ namespace Casino.Services.Service
             // ConnectPlayer(new BaseUserIdReq<int>(request.UserId, gameId));
             return (new CreateGameResponce { GameId = gameId });
         }
+        //public GetGameDataResponse GetGameData (GetGameDataRequest request)
+        //{
+        //    var db = new CasinoDbContext(_options);
+        //    var game=db.Games.FirstOrDefault(x=>x.Id == request.GameId);
+        //    if (game == null)
+        //        throw new Exception("Игра не найдена.");
+        //    return new GetGameDataResponse() { Bet = game.AmountBet };
+
+        //}
         ///// <summary>
         ///// Проверка все ли пользователи подключились к игре
         ///// </summary>
         ///// <param name="gameId"></param>
         ///// <returns></returns>
-        //public EnumStatusGame IsGameReady(IsGameReadyRequest req)
-        //{
-        //    var db = new CasinoDbContext(_options);
-        //    var game = db.Games.FirstOrDefault(x => x.Id == req.GameId);
-        //    return game.Status;
-        //}
+        public EnumStatusGame IsGameReady(IsGameReadyRequest req)
+        {
+            var db = new CasinoDbContext(_options);
+            var game = db.Games.FirstOrDefault(x => x.Id == req.GameId);
+            return game.Status;
+        }
 
 
     }

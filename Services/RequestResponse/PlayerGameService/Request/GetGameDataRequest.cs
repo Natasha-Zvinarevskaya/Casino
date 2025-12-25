@@ -4,11 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Casino.Services.RequestResponse.BlackjackGame.Requests
+namespace Casino.Services.RequestResponse.PlayerGameService.Request
 {
-    public class SkipPlayerRequest
+    public class GetGameDataRequest
     {
         public int GameId { get; set; }
-        public int UserId { get; set; }
     }
 }

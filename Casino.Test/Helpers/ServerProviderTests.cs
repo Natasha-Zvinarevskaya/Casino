@@ -92,19 +92,19 @@ namespace Casino.Test.Helpers
             },
                 UserId = 1,
                 IsDealer = false,
-                StatusGame = DataContext.Enums.EnumStatusGame.None } ,
+                StatusGame = DataContext.Enums.EnumStatusPlayerGame.None } ,
                 new PlayerModel
              {Cards=new List<Card> { new Card { Suit = CardSuit.Spades, Value = CardValue.Four }, new Card { Suit = CardSuit.Diamonds, Value = CardValue.Nine }
              },
                 IsDealer = true,
-                StatusGame = DataContext.Enums.EnumStatusGame.None } ,
+                StatusGame = DataContext.Enums.EnumStatusPlayerGame.None } ,
                 new PlayerModel
                 {
                     Cards = new List<Card> { new Card { Suit = CardSuit.Spades, Value = CardValue.Jack }, new Card { Suit = CardSuit.Diamonds, Value = CardValue.Eight }
             },
                 UserId = 2,
                 IsDealer = false,
-                StatusGame = DataContext.Enums.EnumStatusGame.None
+                StatusGame = DataContext.Enums.EnumStatusPlayerGame.None
                 }
                 },
                 PlayersSkiped = 2,

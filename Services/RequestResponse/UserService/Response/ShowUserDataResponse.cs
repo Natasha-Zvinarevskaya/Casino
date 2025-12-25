@@ -9,6 +9,7 @@ namespace Casino.Services.RequestResponse.UserService.Response
 {
     public class ShowUserDataResponse
     {
+        public int UserId { get; set; }
         public string Email { get; set; }
         public string Name { get; set; }
         public decimal Balance { get; set; }

@@ -30,7 +30,7 @@ namespace Casino.Services.Models
         /// <summary>
         /// Статус игры
         /// </summary>
-        public EnumStatusGame StatusGame { get; set; }
+        public EnumStatusPlayerGame StatusGame { get; set; }
 
         /// <summary>
         /// Сумма очков у заданной руки 

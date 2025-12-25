@@ -51,7 +51,7 @@ namespace Casino.Services.Service
             if (_playerScore > 21)
             {
                 Console.WriteLine("Вы проиграли!");
-                var endGameRequest = new EndGameRequest() { ResultGame = EnumStatusGame.Loss, GameId = 1 }; //request.GameId};
+                var endGameRequest = new EndGameRequest() { ResultGame = EnumStatusGame.DealerWin, GameId = 1 }; //request.GameId};
                 _playerGameService.EndGame(endGameRequest);
                 ShowScores();
             }
@@ -173,7 +173,7 @@ namespace Casino.Services.Service
             if (_dealerScore > _playerScore && _dealerScore<=21 || _playerScore>21)
             {
                 Console.WriteLine("Дилер победил!");
-                request.ResultGame = EnumStatusGame.Loss;
+                request.ResultGame = EnumStatusGame.DealerWin;
                 _playerGameService.EndGame(request);
                 ShowScores();
             }
@@ -181,7 +181,7 @@ namespace Casino.Services.Service
 
             {
                 Console.WriteLine("Игрок победил!");
-                request.ResultGame = EnumStatusGame.Win;
+                request.ResultGame = EnumStatusGame.DealerLoss;
                 _playerGameService.EndGame(request);
                 ShowScores();
             }

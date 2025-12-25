@@ -66,13 +66,17 @@ namespace Casino.Web.WebSockets
                 var doc = JsonDocument.Parse(messageJson);
                 var root = doc.RootElement;
 
+                
+
                 if (!root.TryGetProperty("Controller", out var ctrlEl) ||
-                    !root.TryGetProperty("Method", out var methodEl) ||
-                    !root.TryGetProperty("Value", out var valueEl))
+                    !root.TryGetProperty("Method", out var methodEl) )
+                    //||
+                  // !root.TryGetProperty("Value", out var valueEl))
                 {
                     await SendSocketResponse(socket, new { error = "Invalid message format. Required: Controller, Method, Value." }, ct);
                     return;
                 }
+                root.TryGetProperty("Value", out var valueEl);
 
                 controllerName = ctrlEl.GetString() ?? string.Empty;
                 methodName = methodEl.GetString() ?? string.Empty;

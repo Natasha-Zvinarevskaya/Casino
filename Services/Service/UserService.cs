@@ -109,7 +109,7 @@ namespace Casino.Services.Service
             if (user == null)
                 throw new Exception("Пользователь не найден.");
             var historyTransactions = _userTransactionService.GetHistoryTransactions(new GetHistoryTransactionsRequest { UserId = userId });
-            var response = new ShowUserDataResponse { Email = user.Email, Name = user.Name, Balance = user.Balance, HistoryTransaction = historyTransactions.Data };
+            var response = new ShowUserDataResponse {UserId=userId, Email = user.Email, Name = user.Name, Balance = user.Balance, HistoryTransaction = historyTransactions.Data };
             if (File.Exists($"\\Image\\Users\\{userId}.png"))
             {
                 string image = Convert.ToBase64String(File.ReadAllBytes($"\\Image\\Users\\{userId}.png"));

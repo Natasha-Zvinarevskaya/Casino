@@ -9,6 +9,6 @@ namespace Casino.Services.Models.Notifications
 {
     public class StartGameNotification
     {
-        public BlackJackGameModel GameModel {  get; set; }
+        public BlackJackGameModel Data {  get; set; }
     }
 }

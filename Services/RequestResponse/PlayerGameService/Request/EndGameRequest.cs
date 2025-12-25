@@ -1,4 +1,5 @@
 ﻿using Casino.DataContext.Enums;
+using Casino.Services.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,8 @@ namespace Casino.Services.RequestResponse.PlayerGameService.Request
         /// Ид игры
         /// </summary>
         public int GameId { get; set; }
-        public int UserId { get; set; }
+        public List<EndGamePlayer> Players { get; set; }
+
+
     }
 }

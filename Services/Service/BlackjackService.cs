@@ -8,6 +8,7 @@ using Casino.Services.Models.BlackjackGame;
 using Casino.Services.RequestResponse.BlackjackGame.Requests;
 using Casino.Services.RequestResponse.BlackjackGame.Response;
 using Casino.Services.RequestResponse.PlayerGameService.Request;
+using Casino.Services.RequestResponse.UserService.Request;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -23,9 +24,11 @@ namespace Casino.Services.Service
     public class BlackjackService : IBlackJackGameService
     {
         private IPlayerGameService _playerGameService;
-        public BlackjackService(IPlayerGameService playerGameService)
+        private IUserService _userService;
+        public BlackjackService(IPlayerGameService playerGameService, IUserService userService)
         {
             _playerGameService = playerGameService;
+            _userService = userService;
 
         }
 
@@ -35,7 +38,7 @@ namespace Casino.Services.Service
         /// <param name="request">Ид игры и Сумма ставки , выбранная пользователем</param>
         /// <param name="userIds">Список Ид пользователей</param>
         /// <returns></returns>
-        public BaseResponse<BlackJackGameModel> Play(BlackjackPlayRequest request )
+        public BaseResponse<BlackJackGameModel> Play(BlackjackPlayRequest request)
         {
             /// <summary>
             /// Колода
@@ -46,14 +49,15 @@ namespace Casino.Services.Service
             /// Рука игрока
             /// </summary>
             List<PlayerModel> players = new List<PlayerModel>();
+            List<int> userIds = _userService.GetListUsersId(new GetListUsersIdsRequest { GameId = request.GameId }).Data;
             /// <summary>
             /// Рука дилера
             /// </summary>
-            PlayerModel dealer = new PlayerModel() { IsDealer = true, Cards = [], StatusGame = EnumStatusGame.None };
+            PlayerModel dealer = new PlayerModel() { IsDealer = true, Cards = [], StatusGame = EnumStatusPlayerGame.None };
             players.Add(dealer);
-            foreach (var userId in request.UserIds)
+            foreach (var userId in userIds)
             {
-                players.Add(new PlayerModel { IsDealer = false, UserId = userId, Cards = [], StatusGame = EnumStatusGame.None });
+                players.Add(new PlayerModel { IsDealer = false, UserId = userId, Cards = [], StatusGame = EnumStatusPlayerGame.None });
             }
 
             //var startRequest = new StartGameRequest
@@ -193,18 +197,25 @@ namespace Casino.Services.Service
         /// <param name="gameId"></param>
         /// <param name="userId"></param>
         /// <returns></returns> 
-        public BaseResponse<BlackJackGameModel> Turn(TurnPlayerRequest request) 
+        public BaseResponse<BlackJackGameModel> Turn(TurnPlayerRequest request)
         {
-            var gameHistory = _playerGameService.GetHistory(new GetHistoryRequest { GameId =request.GameId});
+            var gameHistory = _playerGameService.GetHistory(new GetHistoryRequest { GameId = request.GameId });
             Deck deck = new Deck();
             deck.HistoryDeck(gameHistory.CardsHistory.Deck);
             List<PlayerModel> players = gameHistory.CardsHistory.Players;
 
-            var index = players.FindIndex(x=>x.UserId == request.UserId);
+            var index = players.FindIndex(x => x.UserId == request.UserId);
             players[index].Cards.Add(deck.DealCard());
-            if (players[index].Score>21)
+            if (players[index].Score > 21)
             {
-                players[index].StatusGame = EnumStatusGame.WaitingEndGame;
+                players[index].StatusGame = EnumStatusPlayerGame.WaitingEndGame;
+                var waitingPlayers = players.Where(x => x.StatusGame == EnumStatusPlayerGame.WaitingEndGame).Select(x => x.StatusGame).ToList();
+                if (waitingPlayers.Count == players.Count - 1)
+                {
+                    var dealerTurn = Turn(new TurnPlayerRequest { GameId = request.GameId, UserId = null });
+                    var requestGameOver = DetermineWinner(new DetermineWinnerRequest { GameId = request.GameId });
+                    return new BaseResponse<BlackJackGameModel>(requestGameOver.Data);
+                }
             }
 
             var saveGameHistoryRequest = new SaveGameHistoryRequest { Deck = deck.GetCards(), PlayersHands = players, GameId = request.GameId };
@@ -253,7 +264,6 @@ namespace Casino.Services.Service
                 GameId = req.GameId,
                 //PlayersSkiped = gameHistory.PlayersSkiped + 1
             };
-            _playerGameService.SaveGameHistory(saveGameHistoryRequest);
 
             //if (saveGameHistoryRequest.PlayersSkiped == gameHistory.CardsHistory.Players.Count)
             //{
@@ -263,14 +273,19 @@ namespace Casino.Services.Service
             //}
 
             List<PlayerModel> players = gameHistory.CardsHistory.Players;
-            var waitingPlayers = players.Where(x=>x.StatusGame==EnumStatusGame.WaitingEndGame).Select(x=>x.StatusGame).ToList();
-            if(waitingPlayers.Count==players.Count-1)
+            var index = players.FindIndex(x => x.UserId == req.UserId);
+            players[index].StatusGame = EnumStatusPlayerGame.WaitingEndGame;
+            _playerGameService.SaveGameHistory(saveGameHistoryRequest);
+
+
+            var waitingPlayers = players.Where(x => x.StatusGame == EnumStatusPlayerGame.WaitingEndGame).Select(x => x.StatusGame).ToList();
+            if (waitingPlayers.Count == players.Count - 1)
             {
                 var dealerTurn = Turn(new TurnPlayerRequest { GameId = req.GameId, UserId = null });
                 var requestGameOver = DetermineWinner(new DetermineWinnerRequest { GameId = req.GameId });
                 return new BaseResponse<BlackJackGameModel>(requestGameOver.Data);
             }
-            var request = new BlackJackGameModel { GameId = req.GameId, Status = EnumStatusGame.None, PLayerCards = gameHistory.CardsHistory.Players};
+            var request = new BlackJackGameModel { GameId = req.GameId, Status = EnumStatusGame.None, PLayerCards = gameHistory.CardsHistory.Players };
             return new BaseResponse<BlackJackGameModel>(request);
         }
 
@@ -344,6 +359,9 @@ namespace Casino.Services.Service
         /// <returns>модель блэкджека с инфо о статусе игры и картах на руках для фронта</returns>
         private BaseResponse<BlackJackGameModel> DetermineWinner(DetermineWinnerRequest request)
         {
+            bool dealerWin = false;
+            bool dealerDraw = false;
+            EnumStatusGame statusGame = EnumStatusGame.None;
             //Нужен только ид игры
             var gameHistory = _playerGameService.GetHistory(new GetHistoryRequest() { GameId = request.GameId });
             var players = gameHistory.CardsHistory.Players;
@@ -361,12 +379,14 @@ namespace Casino.Services.Service
                     //Устанавливаем им ничью,а остальным проигрыш
                     foreach (var winner in winners)
                     {
-                        winner.StatusGame = EnumStatusGame.Draw;
+                        winner.StatusGame = EnumStatusPlayerGame.Draw;
+                        if (winner.IsDealer)
+                            dealerDraw = true;
 
                     }
                     foreach (var loser in losers)
                     {
-                        loser.StatusGame = EnumStatusGame.Loss;
+                        loser.StatusGame = EnumStatusPlayerGame.Loss;
                     }
                 }
                 else
@@ -374,11 +394,13 @@ namespace Casino.Services.Service
                     //Если только 1 игрок набрал 21 очко
                     foreach (var winner in winners)
                     {
-                        winner.StatusGame = EnumStatusGame.Win;
+                        winner.StatusGame = EnumStatusPlayerGame.Win;
+                        if (winner.IsDealer)
+                            dealerWin = true;
                     }
                     foreach (var loser in losers)
                     {
-                        loser.StatusGame = EnumStatusGame.Loss;
+                        loser.StatusGame = EnumStatusPlayerGame.Loss;
                     }
                 }
             }
@@ -412,11 +434,13 @@ namespace Casino.Services.Service
 
                             foreach (var winner in winners)
                             {
-                                winner.StatusGame = EnumStatusGame.Draw;
+                                winner.StatusGame = EnumStatusPlayerGame.Draw;
+                                if (winner.IsDealer)
+                                    dealerDraw = true;
                             }
                             foreach (var loser in losers)
                             {
-                                loser.StatusGame = EnumStatusGame.Loss;
+                                loser.StatusGame = EnumStatusPlayerGame.Loss;
                             }
                         }
                         //Если победитель один
@@ -424,36 +448,64 @@ namespace Casino.Services.Service
                         {
                             foreach (var winner in winners)
                             {
-                                winner.StatusGame = EnumStatusGame.Win;
+                                winner.StatusGame = EnumStatusPlayerGame.Win;
+                                if (winner.IsDealer)
+                                    dealerWin = true;
                             }
                             foreach (var loser in losers)
                             {
-                                loser.StatusGame = EnumStatusGame.Loss;
+                                loser.StatusGame = EnumStatusPlayerGame.Loss;
                             }
                         }
                         //Объединяем 2 списка обратно в players и для каждого игрока проверяем не дилер ли он и заканчиваем игру
                         players = winners.Union(losers).ToList();
-
+                        List<EndGamePlayer> endGamePlayers = new List<EndGamePlayer>();
                         foreach (var player in players)
                         {
                             if (player.UserId != null)
-                                _playerGameService.EndGame(new EndGameRequest { GameId = request.GameId, ResultGame = player.StatusGame, UserId = (int)player.UserId });
+                                endGamePlayers.Add(new EndGamePlayer() { StatusGame = player.StatusGame, UserId = (int)player.UserId });
+                        }
+
+
+
+                        if (dealerDraw)
+                        {
+                            _playerGameService.EndGame(new EndGameRequest { GameId = request.GameId, ResultGame = EnumStatusGame.Draw, Players = endGamePlayers });
+                            statusGame = EnumStatusGame.Draw;
+                        }
+
+                        else
+                            if (dealerWin)
+                        {
+                            _playerGameService.EndGame(new EndGameRequest { GameId = request.GameId, ResultGame = EnumStatusGame.DealerWin, Players = endGamePlayers });
+                            statusGame = EnumStatusGame.DealerWin;
+                        }
+                        else
+                        {
+                            _playerGameService.EndGame(new EndGameRequest { GameId = request.GameId, ResultGame = EnumStatusGame.DealerLoss, Players = endGamePlayers });
+                            statusGame = EnumStatusGame.DealerLoss;
+
                         }
                     }
                 }
                 //Если все игроки набрали больше 21 очка, тогда им всем записываем проигрыш
                 else
                 {
+                    List<EndGamePlayer> endGamePlayers = new List<EndGamePlayer>();
                     foreach (var player in players)
                     {
-                        player.StatusGame = EnumStatusGame.Loss;
+                        player.StatusGame = EnumStatusPlayerGame.Loss;
                         if (player.UserId != null)
-                            _playerGameService.EndGame(new EndGameRequest { GameId = request.GameId, ResultGame = player.StatusGame, UserId = (int)player.UserId });
-
+                            endGamePlayers.Add(new EndGamePlayer() { StatusGame = player.StatusGame, UserId = (int)player.UserId });
                     }
+                    statusGame = EnumStatusGame.Draw;
+
+                    _playerGameService.EndGame(new EndGameRequest { GameId = request.GameId, ResultGame = EnumStatusGame.Draw, Players = endGamePlayers});
+
+
                 }
             }
-            var blackjackGameModel = new BlackJackGameModel { GameId = request.GameId, Status = EnumStatusGame.GameOver, PLayerCards = players };
+            var blackjackGameModel = new BlackJackGameModel { GameId = request.GameId, Status = statusGame, PLayerCards = players };
             return new BaseResponse<BlackJackGameModel>(blackjackGameModel);
         }
     }

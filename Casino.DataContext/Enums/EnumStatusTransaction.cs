@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Casino.DataContext.Enums
 {
-    public enum EnumStatus
+    public enum EnumStatusTransaction
     {
         /// <summary>
         /// Транзакция была отменена

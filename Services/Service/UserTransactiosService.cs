@@ -27,15 +27,15 @@ namespace Casino.Services.Service
         /// </summary>
         /// <param name="gameId">Ид игры</param>
         /// <exception cref="Exception"></exception>
-        public BaseResponse EndGameTransaction(BaseUserIdReq<int> request)
+        public BaseResponse EndGameTransaction(EndGameTransactionRequest request)
         {
             //Находим сыгранную игру и пользователя
             var db = new CasinoDbContext(_options);
-            var userGame = db.UsersGames.FirstOrDefault(x=>x.GameId == request.Request && x.UserId == request.UserId);
+            var userGame = db.UsersGames.FirstOrDefault(x=>x.GameId == request.GameId && x.UserId == request.UserId);
             if (userGame == null)
                 throw new Exception("Пользовательская игра не найдена.");
             
-            var game = db.Games.FirstOrDefault(x => x.Id == request.Request );
+            var game = db.Games.FirstOrDefault(x => x.Id == request.GameId );
             
             var user = db.Users.FirstOrDefault(x => x.Id == request.UserId);
             
@@ -57,14 +57,14 @@ namespace Casino.Services.Service
             {
                 try
                 {
-                    switch (game.Status)
+                    switch (request.StatusGame)
                     {
-                        case EnumStatusGame.Win:
+                        case EnumStatusPlayerGame.Win:
                             user.Balance += game.AmountBet * gameSettings.AmountWin;
                             transactionBet.Type = EnumTypeTransaction.Win;
                             transactionBet.Amount = game.AmountBet * gameSettings.AmountWin;
                             break;
-                        case EnumStatusGame.Loss:
+                        case EnumStatusPlayerGame.Loss:
                             user.Balance -= game.AmountBet;
                             transactionBet.Type = EnumTypeTransaction.Loss;
                             transactionBet.Amount = game.AmountBet;
