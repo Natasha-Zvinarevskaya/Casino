@@ -6,7 +6,7 @@
  */
 
 // === Настройки ===
-const BASE_URL = "http://localhost:5179"; // Пример для прод: "https://api.example.com"
+const BASE_URL = ""; // Пример для прод: "https://api.example.com"
 const USE_MOCK = false; // false — реальные запросы, true — ответ эмулируется локально
 
 // === Утилиты ===

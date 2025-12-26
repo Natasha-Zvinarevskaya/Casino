@@ -51,23 +51,27 @@ namespace Casino.Web.WebSockets
         /// <param name="request"></param>
         public void SendMessageToUser<T>(SendMessageRequest<T> request)
         {
-           // var valueJson = JsonSerializer.Serialize(request.Value);
-
+            // var valueJson = JsonSerializer.Serialize(request.Value);
+            if (request.UserIds.Count > 1)
+                throw new Exception("Невозможно отправить сообщение нескольким пользователям;");
             foreach (var connection in _connections)
             {
                 var user = connection.Value;
-                if (user.UserId == request.CurrentUserId)
+                foreach (var userId in request.UserIds)
                 {
-                    var pushMessage = new NotificationRequest <object>
+                    if (user.UserId == userId)
                     {
-                        Controller = request.Controller,
-                        Method = request.Method,
-                        Value = request.Value
-                    };
-                    string json = JsonSerializer.Serialize(pushMessage);
-                    var buffer = Encoding.UTF8.GetBytes(json);
-                    var segment = new ArraySegment<byte>(buffer);
-                    connection.Key.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
+                        var pushMessage = new NotificationRequest<object>
+                        {
+                            Controller = request.Controller,
+                            Method = request.Method,
+                            Value = request.Value
+                        };
+                        string json = JsonSerializer.Serialize(pushMessage);
+                        var buffer = Encoding.UTF8.GetBytes(json);
+                        var segment = new ArraySegment<byte>(buffer);
+                        connection.Key.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
+                    }
                 }
             }
         }
@@ -77,7 +81,6 @@ namespace Casino.Web.WebSockets
         /// <param name="request"></param>
         public void SendMessageSelectedUsers<T>(SendMessageRequest<T> request)
         {
-            //var valueJson = JsonSerializer.Serialize(request.Value);
             var connectionsSend = _connections.Where(x => request.UserIds.Contains(x.Value.UserId)).ToList();
 
             foreach (var connection in connectionsSend)
@@ -104,8 +107,6 @@ namespace Casino.Web.WebSockets
             /// <param name="request"></param>
         public void SendMessageAllUsers<T>(SendMessageRequest<T> request)
         {
-            //var valueJson = JsonSerializer.Serialize(request.Value);
-
             foreach (var connection in _connections)
             {
                 if (connection.Value.UserId != request.CurrentUserId)

@@ -2,6 +2,7 @@
 using Casino.Services.Models;
 using Casino.Services.RequestResponse.StripeUserService.Request;
 using Casino.Services.RequestResponse.UserTransactionService.Request;
+using Casino.Services.Service;
 using Casino.Web.WebSockets.Models;
 using Microsoft.AspNetCore.Mvc;
 using Stripe.Extension.Interfaces;
@@ -13,9 +14,11 @@ namespace Casino.Web.Controllers.WsControllers
     public class StripeWsController : WsController
     {
         private IStripeUserService _stripeUserService;
-        public StripeWsController(IStripeUserService stripeUserService)
+        private IUserTransactionService _userTransactionService;
+        public StripeWsController(IStripeUserService stripeUserService, IUserTransactionService userTransactionService)
         {
             _stripeUserService = stripeUserService;
+            _userTransactionService = userTransactionService;
         }
         public IActionResult Index()
         {
@@ -32,7 +35,6 @@ namespace Casino.Web.Controllers.WsControllers
             var response = _stripeUserService.AddCard(request);
             return View();
         }
-
         /// <summary>
         /// Пополнение баланса
         /// </summary>
@@ -44,15 +46,12 @@ namespace Casino.Web.Controllers.WsControllers
             return View();
         }
 
+        public BaseResponse<decimal> TestBalanceReplenishment (TopUpBalanceRequest request)
+        {
+            _userTransactionService.ReplenishmentBalance(new BaseUserIdReq<TopUpBalanceRequest>(User.UserId, new TopUpBalanceRequest() { Count = request.Count }));
+            return new BaseResponse<decimal>(request.Count);
+        }
 
-
-        //[Route("Test")]
-        //[HttpPost]
-        //public IActionResult Test(CreatePaymentMethodRequest request)
-        //{
-        //    var response = _stripeUserService.Test(request);
-        //    return View();
-        //}
 
 
     }

@@ -28,14 +28,6 @@ namespace Casino.Services.Service
             _options = options;
             _userService = userService;
         }
-
-        //ToDo:InitGame,то же что и старт, только без пользователей,
-        //ConnectPlayer(смотреть в настройках сколько игроков может играть),если игроков максимальное кол-во, то менять статус игры на Готово к игре),
-        //DisconnectPlayers(наоборот),
-        //GetGame (получить гейм Ид и игроков),
-        //Сделать для игроков выбор комнаты со своим кол-вом макс игроков
-
-
         /// <summary>
         /// Запуск игры
         /// </summary>
@@ -58,18 +50,7 @@ namespace Casino.Services.Service
 
             db.Games.Add(game);
             db.SaveChanges();
-
-            ////Создаем список с UsersGame и добавляем его в текущую игру
-            //var usersGames = new List<UsersGame>();
-            //foreach (var userId in request.UserIds)
-            //{
-            //    usersGames.Add(new UsersGame { UserId = userId, GameId=game.Id });
-            //}
-            //game.UsersGames = usersGames;
-            //db.SaveChanges();
-
             return game.Id;
-
         }
         /// <summary>
         /// Конец игры. Добавлем данные о времени окончания игры и результатов
@@ -134,13 +115,7 @@ namespace Casino.Services.Service
 
             //Десериализуем историю 
             var history = JsonSerializer.Deserialize<CardsHistoryJson>(gameHistory.History);
-
-            ////Находим игру для того чтобы узнать статус игры
-            //var userGame = db.UsersGames.FirstOrDefault(x => x.GameId == request.GameId);
-            //if (userGame == null)
-            //    throw new Exception("Игра не найдена.");
-            var response = new GetHistoryResponse { CardsHistory = history, PlayersSkiped = history.PlayersSkiped }; //StatusGame = userGame.Game.Status };
-
+            var response = new GetHistoryResponse { CardsHistory = history, PlayersSkiped = history.PlayersSkiped }; 
             return response;
         }
         /// <summary>
@@ -148,22 +123,26 @@ namespace Casino.Services.Service
         /// </summary>
         /// <param name="userId">Ид пользователя</param>
         /// <param name="gameId">Ид игры</param>
-        public BaseResponse<EnumStatusGame> ConnectPlayer(BaseUserIdReq<int> request)
+        public BaseResponse<EnumStatusGame> ConnectPlayer(BaseUserIdReq<ConnectPlayerRequest> request)
         {
             var db = new CasinoDbContext(_options);
-            var user = db.UsersGames.FirstOrDefault(x => x.UserId == request.UserId && x.GameId == request.Request);
+            var user = db.UsersGames.FirstOrDefault(x => x.UserId == request.UserId && x.GameId == request.Request.GameId);
             if (user != null)
                 throw new Exception("Пользователь уже подключен к игре.");
-            db.UsersGames.Add(new UsersGame { GameId = request.Request, UserId = request.UserId });
-            var game = db.Games.FirstOrDefault(x => x.Id == request.Request);
+            //Проверка баланса игрока
+            var userData=_userService.GetUserData (request.UserId);
+            if (userData.Data.Balance <= request.Request.Bet)
+                throw new Exception("Недостаточно средств,чтобы начать игру.");
+
+            db.UsersGames.Add(new UsersGame { GameId = request.Request.GameId, UserId = request.UserId });
+            var game = db.Games.FirstOrDefault(x => x.Id == request.Request.GameId);
             if (game == null)
                 throw new Exception("Игра не найдена.");
             db.SaveChanges();
 
-            var countUsers = db.UsersGames.Where(x => x.GameId == request.Request).Select(x => x.UserId).ToList();
+            var countUsers = db.UsersGames.Where(x => x.GameId == request.Request.GameId).Select(x => x.UserId).ToList();
 
-
-            var gameSettings = db.GameSettings.FirstOrDefault(x => x.GameId == request.Request);
+            var gameSettings = db.GameSettings.FirstOrDefault(x => x.GameId == request.Request.GameId);
             //Сделать проверку на максимальное кол-во пользователей
             if (countUsers.Count == gameSettings.MaxCountPlayers)
             {
@@ -171,8 +150,6 @@ namespace Casino.Services.Service
                 db.SaveChanges();
                 return new BaseResponse<EnumStatusGame>(EnumStatusGame.ReadyToGame);
             }
-
-
             return new BaseResponse<EnumStatusGame>(EnumStatusGame.WaitingPlayers);
         }
         /// <summary>

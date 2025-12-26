@@ -23,9 +23,9 @@ namespace Casino.Test.ServicesTest
 
             var gameId = 2;
             var userId = 1;
-
+            var bet = 5;
             //Act
-            var result = playerGameService.ConnectPlayer(new BaseUserIdReq <int> (userId, gameId));
+            var result = playerGameService.ConnectPlayer(new BaseUserIdReq <ConnectPlayerRequest> (userId, new ConnectPlayerRequest { GameId = gameId , Bet = bet}));
 
             //Assert
             Assert.Equal(true, result.IsSucces);

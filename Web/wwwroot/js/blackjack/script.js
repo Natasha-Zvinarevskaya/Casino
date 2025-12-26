@@ -11,6 +11,7 @@ let socket = null;
 let currentGame = null;
 let lastRenderedModel = null;
 let userId = 0;
+let user = {};
 // ---------------------------
 // UI HELPERS
 // ---------------------------
@@ -53,6 +54,14 @@ function addLog(text, color = "white") {
 function showModal(title, sub) {
     const m = document.getElementById("modal");
     if (!m) return;
+    var resultsElm = document.getElementById("results");
+    var spanElm = "<div class='playerResults'>{results}</div>";
+    var htmlResults = "";
+    currentGame.PLayerCards.forEach(function (item) {
+        var textResults = "Игрок:" + (item.IsDealer ? "Диллер" : item.UserId) + " - " + item.Score + " очков";
+        htmlResults += spanElm.replace("{results}", textResults);
+    })
+    resultsElm.innerHTML = htmlResults;
 
     document.getElementById("modalMessage").textContent = title;
     document.getElementById("modalSub").textContent = sub || "";
@@ -72,25 +81,28 @@ function hideModal() {
 function renderCard(card) {
     if (!card) return null;
 
-    const suits = ["♥", "♦", "♣", "♠"];
-    const suit = suits[card.Suit] ?? "?";
+  
+        const suits = ["♥", "♦", "♣", "♠"];
+        const suit = suits[card.Suit] ?? "?";
 
-    const valMap = {
-        2: "2", 3: "3", 4: "4", 5: "5",
-        6: "6", 7: "7", 8: "8", 9: "9",
-        10: "10", 11: "A"
-    };
-    const val = valMap[card.Value] ?? card.Value;
+        const valMap = {
+            2: "2", 3: "3", 4: "4", 5: "5",
+            6: "6", 7: "7", 8: "8", 9: "9",
+            10: "10", 11: "A"
+        };
+        const val = valMap[card.Value] ?? card.Value;
 
-    const d = document.createElement("div");
-    d.className = "cardItem card " + (suit === "♥" || suit === "♦" ? "red" : "black");
-    d.style.position = "relative";
+        const d = document.createElement("div");
+        d.className = "cardItem card " + (suit === "♥" || suit === "♦" ? "red" : "black");
+        d.style.position = "relative";
 
-    d.innerHTML = `
+        d.innerHTML = `
         <div class="cardTop">${suit}</div>
         <div class="cardCenter">${val}</div>
         <div class="cardBottom">${suit}</div>
     `;
+    
+    
     return d;
 }
 
@@ -113,7 +125,7 @@ function renderGame(model) {
     const dealer = (model.PLayerCards || []).find(p => p.IsDealer);
     if (dealer && dealer.Cards) {
         dealer.Cards.forEach(c => {
-            const card = renderCard(c);
+            const card = renderCard(c,true);
             if (card) dealerArea.appendChild(card);
         });
     }
@@ -266,13 +278,13 @@ function handleIncoming(msg) {
 
     // 🟡 3) Другой игрок берёт карту
     if (ctrl === "BlackJackGameWsController" && method === "TurnAnotherPlayer") {
-        addLog(`Игрок ${msg.Value?.Data.UserId} взял карту`, "#ffe16c");
+        addLog(`Игрок ${msg.Value?.UserId} взял карту`, "#ffe16c");
         return;
     }
 
     // 🟠 4) Другой игрок пропустил ход
     if (ctrl === "BlackJackGameWsController" && method === "SkipAnotherPlayer") {
-        addLog(`Игрок ${msg.Value?.Data.UserId} пропустил ход`, "#dfe7ff");
+        addLog(`Игрок ${msg.Value?.UserId} пропустил ход`, "#dfe7ff");
         return;
     }
     //Игра создана
@@ -293,7 +305,8 @@ function handleIncoming(msg) {
     if (ctrl === "UserWsController" && method === "ShowUserData") {
         addLog(`{Получение UserId}`, "#dfe7ff");
         userId = msg.Value.Data.UserId;
-
+        user = msg.Value.Data;
+        showUserData();
         return;
     }
     //Ход текущего игрока
@@ -308,10 +321,30 @@ function handleIncoming(msg) {
         renderGame(msg.Value.Data.Request);
         return;
     }
+    //Конец игры
+    if (ctrl === "BlackJackGameWsController" && method === "EndGame") {
+        addLog(`Конец игры`, "#dfe7ff");
+        renderGame(msg.Value.GameModel);
+        return;
+    }
+    //Пополнение баланса
+    if (ctrl === "StripeWsController" && method === "TestBalanceReplenishment") {
+        addLog(`Баланс пополнен на 100`, "#dfe7ff");
+        user.Balance = user.Balance + msg.Value.Data;
+        showUserData();
+        return;
+    }
     // 🟢 5) Обычный ответ на любые игровые запросы
     if (msg.IsSucces && msg.Data) {
         renderGame(msg.Data);
     }
+}
+function showUserData() {
+    document.getElementById("balanceText").textContent = user.Balance;
+    document.getElementById("emailText").textContent = user.Email;
+    document.getElementById("nameText").textContent = user.Name;
+    document.getElementById("userIdText").textContent = user.UserId;
+
 }
 
 // ---------------------------
@@ -328,6 +361,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const betSelect = document.getElementById("betSelect");
     const maxPlayers = document.getElementById("maxPlayers");
     const modalRestartBtn = document.getElementById("modalRestart");
+    const balanceReplenishmentBtn = document.getElementById("balanceReplenishment");
 
 
     // CREATE GAME
@@ -344,7 +378,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const gid = Number(document.getElementById("currentGameId").textContent);
         if (!gid) return showToast("Нет ID игры", true);
 
-        sendMessage("GameWsController", "ConnectPlayer", { gameId: gid });
+        sendMessage("GameWsController", "ConnectPlayer", { gameId: gid, Bet: Number(betSelect.value) });
     };
 
     // DISCONNECT
@@ -366,12 +400,19 @@ document.addEventListener("DOMContentLoaded", () => {
             gameId: currentGame?.GameId
         });
     };
+    //START
     newBtn.onclick = () => {
         sendMessage("BlackJackGameWsController", "StartGame", {
             gameId: currentGame?.GameId,
         });
     };
+    //RESTART
     modalRestartBtn.onclick = () => {
         location.reload();
+    };
+    balanceReplenishmentBtn.onclick = () => {
+        sendMessage("StripeWsController", "TestBalanceReplenishment", {
+            Count: 100
+        });
     }
 });

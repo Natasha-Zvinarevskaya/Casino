@@ -15,11 +15,12 @@ namespace Casino.Services.Models.BlackjackGame
         /// <summary>
         /// Масть карты
         /// </summary>
-        public CardSuit Suit { get; set; }
+        public CardSuit? Suit { get; set; }
         /// <summary>
         /// Значение карты 
         /// </summary>
-        public CardValue Value { get; set; }
+        public CardValue? Value { get; set; }
+        public bool IsHide {  get; set; }
 
         /// <summary>
         /// Показывает значение и масть карты
@@ -28,6 +29,15 @@ namespace Casino.Services.Models.BlackjackGame
         public void ToString(Card card)
         {
             Console.WriteLine($"{card.Value} of {card.Suit} ");
+        }
+        public Card HideCard ()
+        {
+            var card = new Card ();
+            card.IsHide = true;
+            card.Suit = null;
+            card.Value = null;
+            return card;
+           
         }
     }
 }

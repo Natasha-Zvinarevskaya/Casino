@@ -44,10 +44,10 @@ namespace Casino.Web.Controllers.WsControllers
         /// </summary>
         /// <param name="gameId">ид игры</param>
         /// <returns></returns>
-        public BaseResponse ConnectPlayer(GetListUsersIdsRequest req)
+        public BaseResponse ConnectPlayer(ConnectPlayerRequest req)
         {
-           var response = _playerGameService.ConnectPlayer(new BaseUserIdReq<int>(User.UserId, req.GameId));
-
+           var response = _playerGameService.ConnectPlayer(new BaseUserIdReq<ConnectPlayerRequest>(User.UserId, new ConnectPlayerRequest { GameId = req.GameId, Bet = req.Bet }));
+            
             var userIds = _userService.GetListUsersId(new GetListUsersIdsRequest { GameId = req.GameId });
             _webSocketManager.SendMessageSelectedUsers(new SendMessageRequest<ConnectPlayerNotification>
             {
@@ -97,6 +97,8 @@ namespace Casino.Web.Controllers.WsControllers
                 Method = nameof(CreateGame),
                 Value = new CreateGameNotification { GameId = gameId.GameId }
             });
+             _playerGameService.ConnectPlayer(new BaseUserIdReq<ConnectPlayerRequest>(User.UserId, new ConnectPlayerRequest { GameId = gameId.GameId, Bet = request.Bet }));
+
             return (gameId);
           
         }

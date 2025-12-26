@@ -1,14 +1,17 @@
 ﻿using Casino.DataContext.Enums;
 using Casino.Services.Interfaces;
 using Casino.Services.Models;
+using Casino.Services.Models.BlackjackGame;
 using Casino.Services.Models.Notifications;
 using Casino.Services.RequestResponse.BlackjackGame.Requests;
 using Casino.Services.RequestResponse.BlackjackGame.Response;
 using Casino.Services.RequestResponse.PlayerGameService.Request;
 using Casino.Services.RequestResponse.UserService.Request;
 using Casino.Services.Service;
+using Casino.Web.Models;
 using Casino.Web.WebSockets.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Numerics;
 
 namespace Casino.Web.Controllers.WsControllers
 
@@ -30,8 +33,6 @@ namespace Casino.Web.Controllers.WsControllers
             _userService = userService;
             _playerGameService = playerGameService;
         }
-
-
         /// <summary>
         /// Начало игры 
         /// </summary>
@@ -45,22 +46,35 @@ namespace Casino.Web.Controllers.WsControllers
             var response = _blackJackGameService.Play(request);
             //Уведомление пользователям
             var userIds = _userService.GetListUsersId(new GetListUsersIdsRequest { GameId = request.GameId });
+
             if (userIds.Data.Any())
             {
-                // foreach (var userId in userIds.Data)
-                // {
-                _webSocketManager.SendMessageSelectedUsers(new SendMessageRequest<StartGameNotification>()
+                var hideUserCards = new HideUserCards(_webSocketManager);
+                hideUserCards.HideCards(new SendMessageRequest<BlackJackGameModel>()
                 {
-                    CurrentUserId = User.UserId,
                     Controller = nameof(BlackJackGameWsController),
                     Method = nameof(StartGame),
-                    Value = new StartGameNotification { Data = response.Data },
-                    UserIds = userIds.Data
+                    Value = new BlackJackGameModel()
+                    {
+                        GameId = response.Data.GameId,
+                        PLayerCards = response.Data.PLayerCards,
+                        Status = response.Data.Status
+                    },
+                    UserIds = userIds.Data, 
+                    CurrentUserId = User.UserId
                 });
-                //}
+                //_webSocketManager.SendMessageSelectedUsers(new SendMessageRequest<StartGameNotification>()
+                //{
+                //    CurrentUserId = User.UserId,
+                //    Controller = nameof(BlackJackGameWsController),
+                //    Method = nameof(StartGame),
+                //    Value = new StartGameNotification { Data = res },
+                //    UserIds = userIds.Data
+                //});
             }
-
-            return response;
+           BlackjackGameHelper blackjackGameHelper = new BlackjackGameHelper();
+           var res = blackjackGameHelper.HideUserCards(response.Data, User.UserId);
+            return new BaseResponse<BlackJackGameModel>(res);
         }
         /// <summary>
         /// Ход игрока
@@ -75,20 +89,18 @@ namespace Casino.Web.Controllers.WsControllers
             var userIds = _userService.GetListUsersId(new GetListUsersIdsRequest { GameId = request.GameId });
             if (userIds.Data.Any())
             {
-                // foreach (var userId in userIds.Data)
-                // {
                 _webSocketManager.SendMessageSelectedUsers(new SendMessageRequest<TurnPlayerNotification>()
                 {
                     CurrentUserId = User.UserId,
                     Controller = nameof(BlackJackGameWsController),
-                    Method = nameof(TurnPlayer),
+                    Method = nameof(TurnAnotherPlayer),
                     Value = new TurnPlayerNotification { UserId = User.UserId },
                     UserIds = userIds.Data
                 });
-
-                // }
             }
-            return new BaseResponse<BaseUserIdReq<BlackJackGameModel>>(new BaseUserIdReq<BlackJackGameModel>(User.UserId, response.Data));
+            BlackjackGameHelper blackjackGameHelper = new BlackjackGameHelper();
+            var res = blackjackGameHelper.HideUserCards(response.Data, User.UserId);
+            return new BaseResponse<BaseUserIdReq<BlackJackGameModel>>(new BaseUserIdReq<BlackJackGameModel>(User.UserId, res));
         }
         /// <summary>
         /// Пропуск хода игрока
@@ -102,41 +114,42 @@ namespace Casino.Web.Controllers.WsControllers
             var userIds = _userService.GetListUsersId(new GetListUsersIdsRequest { GameId = request.GameId });
             if (userIds.Data.Any())
             {
-                // foreach (var userId in userIds.Data)
-                //{
                 _webSocketManager.SendMessageSelectedUsers(new SendMessageRequest<SkipPlayerNotification>()
                 {
                     CurrentUserId = User.UserId,
                     Controller = nameof(BlackJackGameWsController),
-                    Method = nameof(SkipPlayer),
+                    Method = nameof(SkipAnotherPlayer),
                     Value = new SkipPlayerNotification { UserId = User.UserId },
                     UserIds = userIds.Data
 
                 });
-                //}
             }
 
-            if ((int)response.Data.Status == 6)
+            if ((int)response.Data.Status == 1 || (int)response.Data.Status == 2 || (int)response.Data.Status == 3)
             {
-                // foreach (var userId in userIds.Data)
-                // {
                 _webSocketManager.SendMessageSelectedUsers(new SendMessageRequest<GameOverNotification>()
                 {
                     CurrentUserId = User.UserId,
                     Controller = nameof(BlackJackGameWsController),
-                    Method = nameof(SkipPlayer),
+                    Method = nameof(EndGame),
                     Value = new GameOverNotification { GameModel = response.Data },
                     UserIds = userIds.Data
                 });
-                //}
+                return new BaseResponse<BaseUserIdReq<BlackJackGameModel>>(new BaseUserIdReq<BlackJackGameModel>(User.UserId, response.Data));
             }
-            return new BaseResponse<BaseUserIdReq<BlackJackGameModel>>(new BaseUserIdReq<BlackJackGameModel>(User.UserId, response.Data));
+            BlackjackGameHelper blackjackGameHelper = new BlackjackGameHelper();
+            var res = blackjackGameHelper.HideUserCards(response.Data, User.UserId);
+            return new BaseResponse<BaseUserIdReq<BlackJackGameModel>>(new BaseUserIdReq<BlackJackGameModel>(User.UserId, res));
         }
         public BaseResponse SkipAnotherPlayer()
         {
             return new BaseResponse();
         }
         public BaseResponse TurnAnotherPlayer()
+        {
+            return new BaseResponse();
+        }
+        public BaseResponse EndGame()
         {
             return new BaseResponse();
         }

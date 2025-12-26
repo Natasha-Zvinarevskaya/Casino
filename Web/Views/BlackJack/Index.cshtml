@@ -13,6 +13,14 @@
         WebSocket: <span id="connState">connecting...</span>
     </div>
 
+    <div class="section card">
+        <h3>Email:  <span id="emailText"></span></h3>
+        <h3>Имя:  <span id="nameText"></span></h3>
+        <h3>UserId:  <span id="userIdText"></span></h3>
+        <h3>Баланс:  <span id="balanceText"></span></h3>
+
+        <button id="balanceReplenishment" class="btn full">Пополнить баланс</button>
+    </div>
     <!-- GAME LOG (для событий: кто вошёл, кто вышел, кто взял карту, кто пропустил) -->
     <div class="section card">
         <h3>События игры</h3>
@@ -71,6 +79,9 @@
     <div class="modal-content">
         <h2 id="modalMessage"></h2>
         <p id="modalSub"></p>
+        <div id="results">
+
+        </div>
 
         <button id="modalRestart" class="btn full">Ок</button>
     </div>

@@ -31,6 +31,7 @@ namespace Casino.Services.Models
         /// Статус игры
         /// </summary>
         public EnumStatusPlayerGame StatusGame { get; set; }
+        // public bool IsHide {  get; set; }
 
         /// <summary>
         /// Сумма очков у заданной руки 
@@ -41,7 +42,7 @@ namespace Casino.Services.Models
         {
             int aces = 0;
             int score = 0;
-            foreach (var card in cards)
+            foreach (var card in cards.Where(x => !x.IsHide))
             {
                 score = score + (int)card.Value;
                 if (card.Value == CardValue.Ace)
@@ -53,6 +54,16 @@ namespace Casino.Services.Models
                 aces--;
             }
             return score;
+        }
+        public List<Card> HideCards()
+        {
+            var cards = new List<Card>();
+             foreach (var card in Cards)
+            {
+                cards.Add(card.HideCard());
+            }
+             return cards;
+            
         }
     }
 }
