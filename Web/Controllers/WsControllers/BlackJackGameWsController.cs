@@ -1,7 +1,6 @@
 ﻿using Casino.DataContext.Enums;
 using Casino.Services.Interfaces;
 using Casino.Services.Models;
-using Casino.Services.Models.BlackjackGame;
 using Casino.Services.Models.Notifications;
 using Casino.Services.RequestResponse.BlackjackGame.Requests;
 using Casino.Services.RequestResponse.BlackjackGame.Response;

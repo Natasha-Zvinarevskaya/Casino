@@ -1,4 +1,4 @@
-﻿using Casino.Web.Middleware;
+﻿using Casino.Web.Middlewares;
 using System;
 using System.IO;
 using System.Net.Security;

@@ -1,11 +1,11 @@
-﻿using Casino.Services.Enums.BlackjackGame;
+﻿using Casino.DataContext.Enums.BlackjackGame;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Casino.Services.Models.BlackjackGame
+namespace Casino.DataContext.Models.BlackjackGame
 {
     /// <summary>
     /// Класс Карта. Как должна выглядеть она карта

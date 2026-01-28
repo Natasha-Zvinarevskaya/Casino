@@ -87,7 +87,7 @@ namespace Casino.Services.Service
             var gameHistory = db.GameHistory.FirstOrDefault(x => x.GameId == request.GameId);
             if (gameHistory == null)
             {
-                var saveGameHistory = new GameHistory { History = historyModelJson, GameId = request.GameId };
+                var saveGameHistory = new GameHistory { History = historyModelJson, GameId = request.GameId, DealerCheating = request.DealerCheating };
                 db.GameHistory.Add(saveGameHistory);
                 db.SaveChanges();
             }
@@ -186,27 +186,19 @@ namespace Casino.Services.Service
             // ConnectPlayer(new BaseUserIdReq<int>(request.UserId, gameId));
             return (new CreateGameResponce { GameId = gameId });
         }
-        //public GetGameDataResponse GetGameData (GetGameDataRequest request)
-        //{
-        //    var db = new CasinoDbContext(_options);
-        //    var game=db.Games.FirstOrDefault(x=>x.Id == request.GameId);
-        //    if (game == null)
-        //        throw new Exception("Игра не найдена.");
-        //    return new GetGameDataResponse() { Bet = game.AmountBet };
-
-        //}
-        ///// <summary>
-        ///// Проверка все ли пользователи подключились к игре
-        ///// </summary>
-        ///// <param name="gameId"></param>
-        ///// <returns></returns>
+      
+        /// <summary>
+        /// Проверка все ли пользователи подключились к игре
+        /// </summary>
+        /// <param name="gameId"></param>
+        /// <returns></returns>
         public EnumStatusGame IsGameReady(IsGameReadyRequest req)
         {
             var db = new CasinoDbContext(_options);
             var game = db.Games.FirstOrDefault(x => x.Id == req.GameId);
             return game.Status;
         }
-
+     
 
     }
 }

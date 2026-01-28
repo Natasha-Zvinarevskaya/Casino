@@ -41,7 +41,9 @@ namespace Casino.Services.Service
             db.Users.Add(new Users
             {
                 Password = passwordHash,
-                Email = request.Email
+                Email = request.Email,
+                DateRegistration = DateTime.UtcNow,
+                Role = EnumRoles.User
 
             });
             db.SaveChanges();
@@ -74,6 +76,8 @@ namespace Casino.Services.Service
             var user = db.Users.FirstOrDefault(x => x.Email == request.Email && x.Password == passwordHash);
             if (user == null)
                 return new BaseResponse<UserSessionModel>("Пользователь не найден");
+            if (user.DateRemove != null)
+                return new BaseResponse<UserSessionModel>("Пользователь удален. Авторизация невозможна");
             var dataClose = DateTime.UtcNow;
             dataClose.AddHours(3);
             var token = Guid.NewGuid();
@@ -104,22 +108,20 @@ namespace Casino.Services.Service
         /// <exception cref="Exception"></exception>
         public BaseResponse<ShowUserDataResponse> GetUserData(int userId)
         {
+            string image = null;
             var db = new CasinoDbContext(_options);
             var user = db.Users.FirstOrDefault(x => x.Id == userId);
             if (user == null)
                 throw new Exception("Пользователь не найден.");
             var historyTransactions = _userTransactionService.GetHistoryTransactions(new GetHistoryTransactionsRequest { UserId = userId });
-            var response = new ShowUserDataResponse {UserId=userId, Email = user.Email, Name = user.Name, Balance = user.Balance, HistoryTransaction = historyTransactions.Data };
             if (File.Exists($"\\Image\\Users\\{userId}.png"))
             {
-                string image = Convert.ToBase64String(File.ReadAllBytes($"\\Image\\Users\\{userId}.png"));
+                image = Convert.ToBase64String(File.ReadAllBytes($"\\Image\\Users\\{userId}.png"));
 
             }
-            else
-            {
-                string image = null;
 
-            }
+            var response = new ShowUserDataResponse { UserId = userId, Email = user.Email, Name = user.Name, Balance = user.Balance, HistoryTransaction = historyTransactions.Data, Image = image };
+
 
             return new BaseResponse<ShowUserDataResponse>(response);
         }
@@ -165,7 +167,7 @@ namespace Casino.Services.Service
         public BaseResponse<List<int>> GetListUsersId(GetListUsersIdsRequest req)
         {
             var db = new CasinoDbContext(_options);
-            var response = db.UsersGames.Where(x=>x.GameId==req.GameId).Select(x=>x.UserId).ToList();
+            var response = db.UsersGames.Where(x => x.GameId == req.GameId).Select(x => x.UserId).ToList();
             return new BaseResponse<List<int>>(response);
         }
 
@@ -181,9 +183,31 @@ namespace Casino.Services.Service
             var user = db.Users.Where(x => x.Id == userId).FirstOrDefault();
             if (user != null) throw new Exception("Пользователь не найден");
 
-            if(user.Balance <=0) return true;
+            if (user.Balance <= 0) return true;
             else return false;
         }
+        ///// <summary>
+        ///// Создание супер админа
+        ///// </summary>
+        ///// <returns></returns>
+        //public BaseResponse <int> RegistrationAdmin()
+        //{
+        //    using var db = new CasinoDbContext(_options);
+        //    var passwordHash = CreateSHA256("123456");
+        //    db.Users.Add(new Users
+        //    {
+        //        Password = passwordHash,
+        //        Email = "superAdmin@mail.ru",
+        //        DateRegistration = DateTime.UtcNow,
+        //        Role = EnumRoles.SuperAdmin
+
+        //    });
+        //    db.SaveChanges();
+        //    var user = db.Users.FirstOrDefault(x => x.Email == "superAdmin@mail.ru" && x.Password == passwordHash);
+        //    if (user == null)
+        //        return new BaseResponse<int>("Пользователь не найден.");
+        //    return new BaseResponse<int>(user.Id);
+        //}
 
 
     }

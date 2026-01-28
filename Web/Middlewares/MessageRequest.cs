@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace Casino.Web.Middleware
+namespace Casino.Web.Middlewares
 {
     public class MessageRequest
     {

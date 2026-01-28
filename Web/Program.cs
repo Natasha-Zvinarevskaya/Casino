@@ -15,7 +15,7 @@ using Microsoft.IdentityModel.Tokens;
 using System;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
-using Casino.Web.Middleware;
+using Casino.Web.Middlewares;
 //using Logger.Extension.Extension;
 using Logger.Extension.Client.Interface;
 using WS.Extension.Extension;
@@ -26,7 +26,7 @@ using Casino.Services.RequestResponse.UserSessionService.Response;
 using Casino.Web.WebSockets.Models;
 
 
-namespace Web
+namespace Casino.Web
 {
     public class Program
     {
@@ -56,7 +56,7 @@ namespace Web
 
 
 
-            builder.Services.AddSingleton<Casino.Web.WebSockets.WebSocketManager>();
+            builder.Services.AddSingleton<WebSockets.WebSocketManager>();
 
             builder.Services.AddAuthentication("Cookies"); //Сервисы аутенфикации через куки 
             builder.Services.AddAuthorization(); //Сервисы авторизации
@@ -107,6 +107,7 @@ namespace Web
                 //проверка наличия токена
                 if (string.IsNullOrEmpty(token.Value))
                     throw new Exception("Токен не найден. Доступ закрыт.");
+                
 
                 //Макс проверял бд
                 CheckUserResponse user;
@@ -130,12 +131,12 @@ namespace Web
                 using var socket = await context.WebSockets.AcceptWebSocketAsync();
                 var ct = CancellationToken.None;
 
-                var webSocketManager = serviceProvider.GetService<Casino.Web.WebSockets.WebSocketManager>();
+                var webSocketManager = serviceProvider.GetService<WebSockets.WebSocketManager>();
                 var loggerService = serviceProvider.GetService<ILoggerService>();
 
 
                 //Из бд берет пользователя и открывает для него сокет
-                var wsUser = new WsUser { Email = user.Email, Name = user.Name, Token = Guid.Parse(token.Value), UserId = user.Id };
+                var wsUser = new WsUser { Email = user.Email, Name = user.Name, Token = Guid.Parse(token.Value), UserId = user.Id, Role = user.Role };
                 webSocketManager.AddSocket(socket, wsUser);
 
                 //Цикл (пока открыт сокет) слушает сообщение от фронта

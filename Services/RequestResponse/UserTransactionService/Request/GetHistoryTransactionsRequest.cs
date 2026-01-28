@@ -8,6 +8,9 @@ namespace Casino.Services.RequestResponse.UserTransactionService.Request
 {
     public class GetHistoryTransactionsRequest
     {
+        /// <summary>
+        /// Ид пользователя
+        /// </summary>
         public int UserId { get; set; }
     }
 }

@@ -55,11 +55,23 @@ namespace Casino.Web.Controllers.APIControllers
             }
             return Json(new BaseResponse("Ошибка."));
         }
+        
 
         public IActionResult Index ()
         {
             return View();
         }
+        ///// <summary>
+        ///// Создание супер админа
+        ///// </summary>
+        ///// <returns></returns>
+        //[HttpPost]
+        //[Route("RegisterSAdmin")]
+        //public IActionResult RegistrationAdmin()
+        //{
+        //    var userId = _userService.RegistrationAdmin();
+        //    return Json(userId);
+        //}
 
     }
 }

@@ -35,11 +35,14 @@ namespace Casino.Services.Service
             var user = db.Users.FirstOrDefault(x => x.Id == userSession.UserId);
             if (user == null)
                 return new BaseResponse<CheckUserResponse>("Пользователь не найден.");
+            if (user.DateRemove != null)
+                return new BaseResponse<CheckUserResponse>("Пользователь удален.");
             var userModel = new CheckUserResponse
             {
                 Id = user.Id,
                 Email = user.Email,
-                Name = user.Name
+                Name = user.Name,
+                Role = user.Role
 
             };
             return new BaseResponse<CheckUserResponse>(userModel);

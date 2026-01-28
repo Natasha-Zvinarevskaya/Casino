@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Casino.DataContext.Enums;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -28,6 +29,18 @@ namespace Casino.DataContext
         /// Имя
         /// </summary>
         public string? Name { get; set; }
+        /// <summary>
+        /// Роль
+        /// </summary>
+        public EnumRoles Role {  get; set; }
+        /// <summary>
+        /// Дата регистрации
+        /// </summary>
+        public DateTime DateRegistration { get; set; }
+        /// <summary>
+        /// Дата удаления аккаунта
+        /// </summary>
+        public DateTime? DateRemove {  get; set; }
         /// <summary>
         /// Баланс
         /// </summary>

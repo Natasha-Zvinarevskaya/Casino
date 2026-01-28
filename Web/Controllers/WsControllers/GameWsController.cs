@@ -5,7 +5,7 @@ using Casino.Services.Models.Notifications;
 using Casino.Services.RequestResponse.PlayerGameService.Request;
 using Casino.Services.RequestResponse.UserService.Request;
 using Casino.Services.Service;
-using Casino.Web.Middleware;
+using Casino.Web.Middlewares;
 using Casino.Web.WebSockets.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR.Protocol;

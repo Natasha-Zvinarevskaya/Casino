@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Casino.Web.Middleware
+namespace Casino.Web.Middlewares
 {
     public class LogRequest
     {

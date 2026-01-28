@@ -1,7 +1,6 @@
 ﻿using Casino.DataContext;
 using Casino.Services.Interfaces;
 using Casino.Services.Models;
-using Casino.Services.Models.BlackjackGame;
 using Casino.Services.RequestResponse.StripeUserService.Request;
 using Casino.Services.RequestResponse.StripeUserService.Response;
 using Casino.Services.RequestResponse.UserTransactionService.Request;

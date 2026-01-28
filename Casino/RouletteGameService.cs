@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Casino.Services.Service
+namespace Casino
 {
     public class RouletteGameService
     {

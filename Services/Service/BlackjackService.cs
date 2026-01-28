@@ -1,16 +1,18 @@
 ﻿using Azure;
 using Casino.DataContext;
 using Casino.DataContext.Enums;
-using Casino.Services.Enums.BlackjackGame;
+using Casino.DataContext.Enums.BlackjackGame;
+using Casino.DataContext.Models.BlackjackGame;
 using Casino.Services.Interfaces;
 using Casino.Services.Models;
-using Casino.Services.Models.BlackjackGame;
 using Casino.Services.RequestResponse.BlackjackGame.Requests;
 using Casino.Services.RequestResponse.BlackjackGame.Response;
 using Casino.Services.RequestResponse.PlayerGameService.Request;
 using Casino.Services.RequestResponse.UserService.Request;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +20,7 @@ using System.Numerics;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace Casino.Services.Service
 {
@@ -25,11 +28,12 @@ namespace Casino.Services.Service
     {
         private IPlayerGameService _playerGameService;
         private IUserService _userService;
-        public BlackjackService(IPlayerGameService playerGameService, IUserService userService)
+        private DbContextOptions<CasinoDbContext> _options;
+        public BlackjackService(IPlayerGameService playerGameService, IUserService userService, DbContextOptions<CasinoDbContext> options)
         {
             _playerGameService = playerGameService;
             _userService = userService;
-
+            _options = options;
         }
 
         /// <summary>
@@ -70,7 +74,8 @@ namespace Casino.Services.Service
             {
                 Deck = deck.GetCards(),
                 PlayersHands = players,
-                GameId = request.GameId
+                GameId = request.GameId,
+                DealerCheating = false
             };
             _playerGameService.SaveGameHistory(saveGameHistoryRequest);
             var blackjackGameModel = new BlackJackGameModel { GameId = request.GameId, Status = EnumStatusGame.None, PLayerCards = players };
@@ -97,17 +102,104 @@ namespace Casino.Services.Service
                 var waitingPlayers = players.Where(x => x.StatusGame == EnumStatusPlayerGame.WaitingEndGame).Select(x => x.StatusGame).ToList();
                 if (waitingPlayers.Count == players.Count - 1)
                 {
-                    var dealerTurn = Turn(new TurnPlayerRequest { GameId = request.GameId, UserId = null });
+                    var dealerTurn = DealerTurn(new TurnPlayerRequest { GameId = request.GameId, UserId = null });
                     var requestGameOver = DetermineWinner(new DetermineWinnerRequest { GameId = request.GameId });
                     return new BaseResponse<BlackJackGameModel>(requestGameOver.Data);
                 }
             }
 
-            var saveGameHistoryRequest = new SaveGameHistoryRequest { Deck = deck.GetCards(), PlayersHands = players, GameId = request.GameId };
+            var saveGameHistoryRequest = new SaveGameHistoryRequest { Deck = deck.GetCards(), PlayersHands = players, GameId = request.GameId, DealerCheating = false };
             _playerGameService.SaveGameHistory(saveGameHistoryRequest);
             var blackjackGameModel = new BlackJackGameModel { GameId = request.GameId, Status = EnumStatusGame.None, PLayerCards = players };
             return new BaseResponse<BlackJackGameModel>(blackjackGameModel);
         }
+
+        private BaseResponse<BlackJackGameModel> DealerTurn(TurnPlayerRequest request)
+        {
+            var gameHistory = _playerGameService.GetHistory(new GetHistoryRequest { GameId = request.GameId });
+            Deck deck = new Deck();
+            deck.HistoryDeck(gameHistory.CardsHistory.Deck);
+            List<PlayerModel> players = gameHistory.CardsHistory.Players;
+
+            var index = players.FindIndex(x => x.UserId == request.UserId);
+            var dealerSetting = GetDealerSetting();
+            bool risk = false;
+            bool cheating = false;
+            bool winCheating = false;
+            int score = 0;
+
+            //Вероятность ,что дилер рискнет и возьмет дополнительную карту
+            Random rnd = new Random();
+            float res = rnd.Next(101);
+            if (res <= dealerSetting.PercentRisk)
+                risk = true;
+            //Вероятность ,что дилер сжульничает и возьмет из колоды нужную карту
+            res = rnd.Next(101);
+            if (res <= dealerSetting.PercentСheating)
+                cheating = true;
+            //Вероятность ,что дилер возьмет карту для 21 или 20 очков
+            res = rnd.Next(101);
+            if (res <= dealerSetting.PercentWinCheating)
+                winCheating = true;
+
+
+            //Если у дилера очков больше или равно, чем в его настройках, проверяем можем ли дилер рисковать и брать еще одну карту
+            if (players[index].Score >= dealerSetting.CountPoints)
+            {
+                if (risk)
+                    players[index].Cards.Add(deck.DealCard());
+            }
+            else
+                players[index].Cards.Add(deck.DealCard());
+
+
+            //Если дилеру выпало сжульничать
+            if (cheating == true)
+            {
+                //Если выпало победное жульничество
+                if (winCheating == true)
+                {
+                    score = 21;
+                }
+                else
+                {
+                    score = 20;
+                }
+
+                var requiredValue = score - players[index].Score;
+                Card spareCard = null;
+                var cards = deck.GetCards();
+                foreach (var card in cards)
+                {
+                    if (spareCard == null)
+                        spareCard = card;
+                    if ((int)card.Value == requiredValue)
+                    {
+                        players[index].Cards.Add(card);
+                        break;
+                    }
+                    if (card.Value == DataContext.Enums.BlackjackGame.CardValue.Ace && requiredValue == 1)
+                    {
+                        players[index].Cards.Add(card);
+                        break;
+                    }
+
+                    if ((int)card.Value < requiredValue && card.Value > spareCard.Value)
+                        spareCard = card;
+                    //Если не хватает до победы 2 очков, тогда запасная карта будет туз 
+                    if (card.Value == DataContext.Enums.BlackjackGame.CardValue.Ace && requiredValue == 2)
+                        spareCard = card;
+                }
+                if (players[index].Score < 21)
+                    players[index].Cards.Add(spareCard);
+            }
+
+            var saveGameHistoryRequest = new SaveGameHistoryRequest { Deck = deck.GetCards(), PlayersHands = players, GameId = request.GameId, DealerCheating = cheating };
+            _playerGameService.SaveGameHistory(saveGameHistoryRequest);
+            var blackjackGameModel = new BlackJackGameModel { GameId = request.GameId, Status = EnumStatusGame.None, PLayerCards = players };
+            return new BaseResponse<BlackJackGameModel>(blackjackGameModel);
+        }
+
         /// <summary>
         /// Игрок заканчивает ход
         /// </summary>
@@ -124,6 +216,7 @@ namespace Casino.Services.Service
                 Deck = deck.GetCards(),
                 PlayersHands = gameHistory.CardsHistory.Players,
                 GameId = req.GameId,
+                DealerCheating = false
             };
 
             List<PlayerModel> players = gameHistory.CardsHistory.Players;
@@ -135,7 +228,7 @@ namespace Casino.Services.Service
             var waitingPlayers = players.Where(x => x.StatusGame == EnumStatusPlayerGame.WaitingEndGame).Select(x => x.StatusGame).ToList();
             if (waitingPlayers.Count == players.Count - 1)
             {
-                var dealerTurn = Turn(new TurnPlayerRequest { GameId = req.GameId, UserId = null });
+                var dealerTurn = DealerTurn(new TurnPlayerRequest { GameId = req.GameId, UserId = null });
                 var requestGameOver = DetermineWinner(new DetermineWinnerRequest { GameId = req.GameId });
                 return new BaseResponse<BlackJackGameModel>(requestGameOver.Data);
             }
@@ -283,11 +376,53 @@ namespace Casino.Services.Service
                     }
                     statusGame = EnumStatusGame.Draw;
 
-                    _playerGameService.EndGame(new EndGameRequest { GameId = request.GameId, ResultGame = EnumStatusGame.Draw, Players = endGamePlayers});
+                    _playerGameService.EndGame(new EndGameRequest { GameId = request.GameId, ResultGame = EnumStatusGame.Draw, Players = endGamePlayers });
                 }
             }
             var blackjackGameModel = new BlackJackGameModel { GameId = request.GameId, Status = statusGame, PLayerCards = players };
             return new BaseResponse<BlackJackGameModel>(blackjackGameModel);
         }
+        /// <summary>
+        /// Получить настройки дилера
+        /// </summary>
+        /// <returns></returns>
+        private GetDealerSettingResponse GetDealerSetting()
+        {
+            var db = new CasinoDbContext(_options);
+            var queryDealerSetting = db.DealerBJSettings;
+
+            var res = queryDealerSetting.Select(x => new GetDealerSettingRequest
+            {
+                Id = x.Id,
+                Settings = x.Settings
+
+            }).ToList();
+
+            GetDealerSettingResponse response = new GetDealerSettingResponse ();
+           foreach (var item in res)
+            {
+                if (item.Id == EnumBlackJackGameSettings.PercentRisk)
+                    response.PercentRisk = float.Parse(item.Settings);
+
+                if (item.Id == EnumBlackJackGameSettings.CountPoints)
+                    response.CountPoints = int.Parse(item.Settings);
+
+                if (item.Id == EnumBlackJackGameSettings.PercentWinCheating)
+                    response.PercentWinCheating = float.Parse(item.Settings);
+
+                if (item.Id == EnumBlackJackGameSettings.PercentСheating)
+                    response.PercentСheating = float.Parse(item.Settings);
+            }
+            return response;
+            //var response = new GetDealerSettingResponse
+            //{
+            //    CountPoints = queryDealerSetting.CountPoints,
+            //    PercentRisk = queryDealerSetting.PercentRisk,
+            //    PercentWinCheating = queryDealerSetting.PercentWinCheating,
+            //    PercentСheating = queryDealerSetting.PercentСheating
+            //};
+
+        }
+
     }
 }

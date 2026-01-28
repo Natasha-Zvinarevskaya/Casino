@@ -1,11 +1,11 @@
 ﻿using Casino.DataContext.Enums;
-using Casino.Services.Enums.BlackjackGame;
+using Casino.DataContext.Enums.BlackjackGame;
+using Casino.DataContext.Models.BlackjackGame;
 using Casino.Services.Interfaces;
-using Casino.Services.Models.BlackjackGame;
 using Casino.Services.RequestResponse.BlackjackGame.Requests;
 using Casino.Services.RequestResponse.PlayerGameService.Request;
 
-namespace Casino.Services.Service
+namespace Casino
 {
     /// <summary>
     /// Класс процесса игры

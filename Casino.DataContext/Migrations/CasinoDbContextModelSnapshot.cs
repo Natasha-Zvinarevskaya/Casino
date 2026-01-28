@@ -22,6 +22,19 @@ namespace Casino.DataContext.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Casino.DataContext.DealerBJSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Settings")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DealerBJSettings");
+                });
+
             modelBuilder.Entity("Casino.DataContext.Game", b =>
                 {
                     b.Property<int>("Id")
@@ -62,6 +75,9 @@ namespace Casino.DataContext.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("DealerCheating")
+                        .HasColumnType("bit");
 
                     b.Property<int>("GameId")
                         .HasColumnType("int");
@@ -283,6 +299,12 @@ namespace Casino.DataContext.Migrations
                     b.Property<decimal>("Balance")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<DateTime>("DateRegistration")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateRemove")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
 
@@ -291,6 +313,9 @@ namespace Casino.DataContext.Migrations
 
                     b.Property<string>("Password")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 

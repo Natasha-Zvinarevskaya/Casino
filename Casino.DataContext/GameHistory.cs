@@ -18,7 +18,7 @@ namespace Casino.DataContext
         /// json формат истории игры
         /// </summary>
         public string History { get; set; }
-     
+        public bool DealerCheating { get; set; }
 
         public int GameId { get; set; }
         public Game Game { get; set; }

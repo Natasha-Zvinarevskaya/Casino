@@ -1,6 +1,6 @@
 ﻿using Casino.DataContext.Enums;
-using Casino.Services.Enums.BlackjackGame;
-using Casino.Services.Models.BlackjackGame;
+using Casino.DataContext.Enums.BlackjackGame;
+using Casino.DataContext.Models.BlackjackGame;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -55,6 +55,10 @@ namespace Casino.Services.Models
             }
             return score;
         }
+        /// <summary>
+        /// Скрыть карты 
+        /// </summary>
+        /// <returns></returns>
         public List<Card> HideCards()
         {
             var cards = new List<Card>();

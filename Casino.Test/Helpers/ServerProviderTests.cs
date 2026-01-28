@@ -1,8 +1,8 @@
 ﻿using Casino.DataContext;
-using Casino.Services.Enums.BlackjackGame;
+using Casino.DataContext.Enums.BlackjackGame;
+using Casino.DataContext.Models.BlackjackGame;
 using Casino.Services.Interfaces;
 using Casino.Services.Models;
-using Casino.Services.Models.BlackjackGame;
 using Casino.Services.RequestResponse.GoogleAuth.Request;
 using Casino.Services.Service;
 using Google.Apis.Drive.v3.Data;

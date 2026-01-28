@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 
-namespace Casino.Web.Middleware
+namespace Casino.Web.Middlewares
 {
     public class Middleware
     {

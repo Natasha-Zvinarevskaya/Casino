@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Casino.Services.Enums.BlackjackGame
+namespace Casino.DataContext.Enums.BlackjackGame
 {
     /// <summary>
     /// Значение карты о 2 до тузов

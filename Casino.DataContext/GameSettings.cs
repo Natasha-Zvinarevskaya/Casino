@@ -28,6 +28,8 @@ namespace Casino.DataContext
 
         public Game Game { get; set; }
         public int GameId { get; set; }
+
+        
         
 
 

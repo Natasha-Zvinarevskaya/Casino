@@ -1,5 +1,4 @@
 ﻿using Casino.Services.Models;
-using Casino.Services.Models.BlackjackGame;
 using Casino.Services.RequestResponse.BlackjackGame.Requests;
 using Casino.Services.RequestResponse.BlackjackGame.Response;
 using System;

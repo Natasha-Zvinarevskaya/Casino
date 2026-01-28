@@ -1,5 +1,4 @@
 ﻿using Casino.Services.Models;
-using Casino.Services.Models.BlackjackGame;
 using System;
 using System.Collections.Generic;
 using System.Linq;

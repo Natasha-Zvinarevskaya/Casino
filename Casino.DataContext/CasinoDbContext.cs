@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using System;
+using System.Xml;
 
 namespace Casino.DataContext
 {
@@ -26,6 +27,8 @@ namespace Casino.DataContext
         public DbSet<MoneyTransaction> MoneyTransactions { get; set; }
         public DbSet<UsersGame> UsersGames { get; set; }
 
+        public DbSet<DealerBJSettings> DealerBJSettings { get; set; }
+
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -45,6 +48,10 @@ namespace Casino.DataContext
             
             modelBuilder.Entity<UsersGame>().HasOne(x => x.Game).WithMany(x => x.UsersGames).HasForeignKey(x => x.GameId);
             modelBuilder.Entity<UsersGame>().HasOne(x => x.User).WithMany(x => x.UsersGames).HasForeignKey(x => x.UserId);
+
+            modelBuilder.Entity<DealerBJSettings>()
+          .Property(x => x.Id)
+          .ValueGeneratedNever(); // Отключает автогенерацию
 
 
         }

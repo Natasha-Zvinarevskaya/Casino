@@ -19,6 +19,8 @@ namespace Casino.Services.Interfaces
         BaseResponse SaveUserImage(BaseUserIdReq<SaveUserImageRequest> request);
         BaseResponse<List<int>> GetListUsersId(GetListUsersIdsRequest req);
 
+     //   BaseResponse<int> RegistrationAdmin();
+
 
 
 
