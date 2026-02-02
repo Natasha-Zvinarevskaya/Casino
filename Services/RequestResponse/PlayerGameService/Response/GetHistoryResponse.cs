@@ -21,6 +21,11 @@ namespace Casino.Services.RequestResponse.PlayerGameService.Response
         /// <summary>
         /// Пропустившие ход игроки
         /// </summary>
-        public int PlayersSkiped { get; set; } 
+        public int PlayersSkiped { get; set; }
+
+        public bool Risk { get; set; }
+        public bool Cheating { get; set; }
+        public bool WinCheating { get; set; }
+        public bool IsCrook { get; set; }
     }
 }

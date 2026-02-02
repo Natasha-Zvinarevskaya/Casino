@@ -1,4 +1,5 @@
-﻿using Casino.DataContext.Enums;
+﻿using Casino.DataContext;
+using Casino.DataContext.Enums;
 using Casino.DataContext.Models.BlackjackGame;
 using Casino.Services.Models;
 using System;

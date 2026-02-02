@@ -1,4 +1,5 @@
 ﻿using Casino.DataContext;
+using Casino.Interfaces;
 using Casino.Services.Interfaces;
 using Casino.Services.Service;
 using Microsoft.EntityFrameworkCore;
@@ -14,17 +15,19 @@ namespace Casino
 {
     public class ConfigurationService
     {
-        public IServiceProvider Init (IConfiguration config)
-        {
+        //public IServiceProvider Init (IConfiguration config)
+        //{
 
-            var services = new ServiceCollection();
-            services.AddDbContext<CasinoDbContext>(options => options.UseSqlServer(config.GetConnectionString(nameof(CasinoDbContext))));
-            services.AddScoped<IPlayerGameService, PlayerGameService>();
-            services.AddScoped<IUserTransactionService, UserTransactionService>();
-            services.AddScoped<IUserService, UserService>();
-            return services.BuildServiceProvider();
+        //    //var services = new ServiceCollection();
+        //    //services.AddDbContext<CasinoDbContext>(options => options.UseSqlServer(config.GetConnectionString(nameof(CasinoDbContext))));
+        //    //services.AddScoped<IPlayerGameService, PlayerGameService>();
+        //    //services.AddScoped<IUserTransactionService, UserTransactionService>();
+        //    //services.AddScoped<IUserService, UserService>();
+        //    //services.AddScoped<IBlackJackGameService, BlackjackService>();
+        //    //services.AddScoped<IEmulationBlackjackService, EmulationBlackjackService>();
+        //    //return services.BuildServiceProvider();
 
 
-        }
+        //}
     }
 }

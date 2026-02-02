@@ -1,5 +1,6 @@
 ﻿using Casino.DataContext;
 using Casino.DataContext.Enums;
+using Casino.DataContext.Models.BlackjackGame;
 using Casino.Services.Interfaces;
 using Casino.Services.Models;
 using Casino.Services.RequestResponse.PlayerGameService.Request;
@@ -87,13 +88,25 @@ namespace Casino.Services.Service
             var gameHistory = db.GameHistory.FirstOrDefault(x => x.GameId == request.GameId);
             if (gameHistory == null)
             {
-                var saveGameHistory = new GameHistory { History = historyModelJson, GameId = request.GameId, DealerCheating = request.DealerCheating };
+                var saveGameHistory = new GameHistory
+                {
+                    History = historyModelJson,
+                    GameId = request.GameId,
+                    Cheating = request.Cheating,
+                    Risk = request.Risk,
+                    WinCheating = request.WinCheating,
+                    IsCrook = request.IsCrook
+                };
                 db.GameHistory.Add(saveGameHistory);
                 db.SaveChanges();
             }
             else
             {
                 gameHistory.History = historyModelJson;
+                gameHistory.Risk = request.Risk;
+                gameHistory.Cheating = request.Cheating;
+                gameHistory.WinCheating = request.WinCheating;
+                gameHistory.IsCrook = request.IsCrook;
 
             }
             db.SaveChanges();
@@ -115,7 +128,15 @@ namespace Casino.Services.Service
 
             //Десериализуем историю 
             var history = JsonSerializer.Deserialize<CardsHistoryJson>(gameHistory.History);
-            var response = new GetHistoryResponse { CardsHistory = history, PlayersSkiped = history.PlayersSkiped }; 
+            var response = new GetHistoryResponse
+            {
+                CardsHistory = history,
+                PlayersSkiped = history.PlayersSkiped,
+                Cheating = gameHistory.Cheating,
+                Risk = gameHistory.Risk,
+                WinCheating = gameHistory.WinCheating,
+                IsCrook = gameHistory.IsCrook
+            };
             return response;
         }
         /// <summary>
@@ -130,7 +151,7 @@ namespace Casino.Services.Service
             if (user != null)
                 throw new Exception("Пользователь уже подключен к игре.");
             //Проверка баланса игрока
-            var userData=_userService.GetUserData (request.UserId);
+            var userData = _userService.GetUserData(request.UserId);
             if (userData.Data.Balance <= request.Request.Bet)
                 throw new Exception("Недостаточно средств,чтобы начать игру.");
 
@@ -186,7 +207,7 @@ namespace Casino.Services.Service
             // ConnectPlayer(new BaseUserIdReq<int>(request.UserId, gameId));
             return (new CreateGameResponce { GameId = gameId });
         }
-      
+
         /// <summary>
         /// Проверка все ли пользователи подключились к игре
         /// </summary>
@@ -198,7 +219,7 @@ namespace Casino.Services.Service
             var game = db.Games.FirstOrDefault(x => x.Id == req.GameId);
             return game.Status;
         }
-     
+
 
     }
 }

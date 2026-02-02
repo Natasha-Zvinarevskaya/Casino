@@ -39,8 +39,7 @@ namespace Casino.Services.Service
         /// <summary>
         /// Старт игры при нажатии кнопки на сайте 
         /// </summary>
-        /// <param name="request">Ид игры и Сумма ставки , выбранная пользователем</param>
-        /// <param name="userIds">Список Ид пользователей</param>
+        /// <param name="request">Ид игры </param>
         /// <returns></returns>
         public BaseResponse<BlackJackGameModel> Play(BlackjackPlayRequest request)
         {
@@ -75,7 +74,12 @@ namespace Casino.Services.Service
                 Deck = deck.GetCards(),
                 PlayersHands = players,
                 GameId = request.GameId,
-                DealerCheating = false
+
+                Cheating = false,
+                Risk = false,
+                WinCheating = false,
+                IsCrook = false
+
             };
             _playerGameService.SaveGameHistory(saveGameHistoryRequest);
             var blackjackGameModel = new BlackJackGameModel { GameId = request.GameId, Status = EnumStatusGame.None, PLayerCards = players };
@@ -93,6 +97,8 @@ namespace Casino.Services.Service
             Deck deck = new Deck();
             deck.HistoryDeck(gameHistory.CardsHistory.Deck);
             List<PlayerModel> players = gameHistory.CardsHistory.Players;
+            var saveGameHistoryRequest = new SaveGameHistoryRequest { };
+            var response = new BlackJackGameModel() { };
 
             var index = players.FindIndex(x => x.UserId == request.UserId);
             players[index].Cards.Add(deck.DealCard());
@@ -102,16 +108,40 @@ namespace Casino.Services.Service
                 var waitingPlayers = players.Where(x => x.StatusGame == EnumStatusPlayerGame.WaitingEndGame).Select(x => x.StatusGame).ToList();
                 if (waitingPlayers.Count == players.Count - 1)
                 {
+                    saveGameHistoryRequest = new SaveGameHistoryRequest
+                    {
+                        Deck = deck.GetCards(),
+                        PlayersHands = players,
+                        GameId = request.GameId,
+                        Cheating = false,
+                        Risk = false,
+                        WinCheating = false,
+                        IsCrook = false
+                    };
+                    _playerGameService.SaveGameHistory(saveGameHistoryRequest);
+
                     var dealerTurn = DealerTurn(new TurnPlayerRequest { GameId = request.GameId, UserId = null });
-                    var requestGameOver = DetermineWinner(new DetermineWinnerRequest { GameId = request.GameId });
-                    return new BaseResponse<BlackJackGameModel>(requestGameOver.Data);
+                    response = DetermineWinner(new DetermineWinnerRequest { GameId = request.GameId }).Data;
+                   
                 }
             }
-
-            var saveGameHistoryRequest = new SaveGameHistoryRequest { Deck = deck.GetCards(), PlayersHands = players, GameId = request.GameId, DealerCheating = false };
-            _playerGameService.SaveGameHistory(saveGameHistoryRequest);
-            var blackjackGameModel = new BlackJackGameModel { GameId = request.GameId, Status = EnumStatusGame.None, PLayerCards = players };
-            return new BaseResponse<BlackJackGameModel>(blackjackGameModel);
+            else
+            {
+                saveGameHistoryRequest = new SaveGameHistoryRequest
+                {
+                    Deck = deck.GetCards(),
+                    PlayersHands = players,
+                    GameId = request.GameId,
+                    Cheating = false,
+                    Risk = false,
+                    WinCheating = false,
+                    IsCrook = false
+                };
+                _playerGameService.SaveGameHistory(saveGameHistoryRequest);
+                response = new BlackJackGameModel { GameId = request.GameId, Status = EnumStatusGame.None, PLayerCards = players };
+                
+            }
+            return new BaseResponse<BlackJackGameModel>(response);
         }
 
         private BaseResponse<BlackJackGameModel> DealerTurn(TurnPlayerRequest request)
@@ -126,6 +156,7 @@ namespace Casino.Services.Service
             bool risk = false;
             bool cheating = false;
             bool winCheating = false;
+            bool isCrook = false;
             int score = 0;
 
             //Вероятность ,что дилер рискнет и возьмет дополнительную карту
@@ -141,16 +172,10 @@ namespace Casino.Services.Service
             res = rnd.Next(101);
             if (res <= dealerSetting.PercentWinCheating)
                 winCheating = true;
-
-
-            //Если у дилера очков больше или равно, чем в его настройках, проверяем можем ли дилер рисковать и брать еще одну карту
-            if (players[index].Score >= dealerSetting.CountPoints)
-            {
-                if (risk)
-                    players[index].Cards.Add(deck.DealCard());
-            }
-            else
+            //Дилер добирает карты до своего стандартного кол-ва очков
+            while (players[index].Score < dealerSetting.CountPoints)
                 players[index].Cards.Add(deck.DealCard());
+
 
 
             //Если дилеру выпало сжульничать
@@ -176,11 +201,13 @@ namespace Casino.Services.Service
                     if ((int)card.Value == requiredValue)
                     {
                         players[index].Cards.Add(card);
+                        isCrook = true;
                         break;
                     }
                     if (card.Value == DataContext.Enums.BlackjackGame.CardValue.Ace && requiredValue == 1)
                     {
                         players[index].Cards.Add(card);
+                        isCrook = false;
                         break;
                     }
 
@@ -191,10 +218,33 @@ namespace Casino.Services.Service
                         spareCard = card;
                 }
                 if (players[index].Score < 21)
+
+                {
                     players[index].Cards.Add(spareCard);
+                    isCrook = true;
+                }
+
+            }
+            //Если у дилера очков больше или равно, чем в его настройках и меньше победной комбинации, проверяем можем ли дилер рисковать и брать еще одну карту
+            if (players[index].Score >= dealerSetting.CountPoints && players[index].Score < score)
+            {
+                if (risk)
+                {
+                    players[index].Cards.Add(deck.DealCard());
+                    isCrook = true;
+                }
             }
 
-            var saveGameHistoryRequest = new SaveGameHistoryRequest { Deck = deck.GetCards(), PlayersHands = players, GameId = request.GameId, DealerCheating = cheating };
+            var saveGameHistoryRequest = new SaveGameHistoryRequest
+            {
+                Deck = deck.GetCards(),
+                PlayersHands = players,
+                GameId = request.GameId,
+                Cheating = cheating,
+                Risk = risk,
+                WinCheating = winCheating,
+                IsCrook = isCrook
+            };
             _playerGameService.SaveGameHistory(saveGameHistoryRequest);
             var blackjackGameModel = new BlackJackGameModel { GameId = request.GameId, Status = EnumStatusGame.None, PLayerCards = players };
             return new BaseResponse<BlackJackGameModel>(blackjackGameModel);
@@ -216,7 +266,10 @@ namespace Casino.Services.Service
                 Deck = deck.GetCards(),
                 PlayersHands = gameHistory.CardsHistory.Players,
                 GameId = req.GameId,
-                DealerCheating = false
+                Cheating = false,
+                Risk = false,
+                WinCheating = false,
+                IsCrook = false
             };
 
             List<PlayerModel> players = gameHistory.CardsHistory.Players;
@@ -353,15 +406,15 @@ namespace Casino.Services.Service
                         }
                         else
                             if (dealerWin)
-                        {
-                            _playerGameService.EndGame(new EndGameRequest { GameId = request.GameId, ResultGame = EnumStatusGame.DealerWin, Players = endGamePlayers });
-                            statusGame = EnumStatusGame.DealerWin;
-                        }
-                        else
-                        {
-                            _playerGameService.EndGame(new EndGameRequest { GameId = request.GameId, ResultGame = EnumStatusGame.DealerLoss, Players = endGamePlayers });
-                            statusGame = EnumStatusGame.DealerLoss;
-                        }
+                            {
+                                _playerGameService.EndGame(new EndGameRequest { GameId = request.GameId, ResultGame = EnumStatusGame.DealerWin, Players = endGamePlayers });
+                                statusGame = EnumStatusGame.DealerWin;
+                            }
+                            else
+                            {
+                                _playerGameService.EndGame(new EndGameRequest { GameId = request.GameId, ResultGame = EnumStatusGame.DealerLoss, Players = endGamePlayers });
+                                statusGame = EnumStatusGame.DealerLoss;
+                            }
                     }
                 }
                 //Если все игроки набрали больше 21 очка, тогда им всем записываем проигрыш
@@ -382,6 +435,7 @@ namespace Casino.Services.Service
             var blackjackGameModel = new BlackJackGameModel { GameId = request.GameId, Status = statusGame, PLayerCards = players };
             return new BaseResponse<BlackJackGameModel>(blackjackGameModel);
         }
+
         /// <summary>
         /// Получить настройки дилера
         /// </summary>
@@ -398,8 +452,8 @@ namespace Casino.Services.Service
 
             }).ToList();
 
-            GetDealerSettingResponse response = new GetDealerSettingResponse ();
-           foreach (var item in res)
+            GetDealerSettingResponse response = new GetDealerSettingResponse();
+            foreach (var item in res)
             {
                 if (item.Id == EnumBlackJackGameSettings.PercentRisk)
                     response.PercentRisk = float.Parse(item.Settings);
@@ -423,6 +477,7 @@ namespace Casino.Services.Service
             //};
 
         }
+
 
     }
 }

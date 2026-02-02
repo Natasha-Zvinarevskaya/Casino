@@ -98,8 +98,16 @@ namespace Casino.Web.Controllers.WsControllers
                 });
             }
             BlackjackGameHelper blackjackGameHelper = new BlackjackGameHelper();
-            var res = blackjackGameHelper.HideUserCards(response.Data, User.UserId);
-            return new BaseResponse<BaseUserIdReq<BlackJackGameModel>>(new BaseUserIdReq<BlackJackGameModel>(User.UserId, res));
+            if (response.Data.Status == EnumStatusGame.None)
+            {
+                var res = blackjackGameHelper.HideUserCards(response.Data, User.UserId);
+                return new BaseResponse<BaseUserIdReq<BlackJackGameModel>>(new BaseUserIdReq<BlackJackGameModel>(User.UserId, res));
+            }
+            else
+            {
+                return new BaseResponse<BaseUserIdReq<BlackJackGameModel>>(new BaseUserIdReq<BlackJackGameModel>(User.UserId, response.Data));
+
+            }
         }
         /// <summary>
         /// Пропуск хода игрока

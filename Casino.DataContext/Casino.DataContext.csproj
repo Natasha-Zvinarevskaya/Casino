@@ -3,11 +3,12 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
-	  <Version> 8.0.6</Version>
+	  <Version> 8.0.7</Version>
 	  <Description>
 		  Нугет отвечает за базу данных проекта Casino
 
-		  8.0.6 - Изменена таблица DealerBlackJackSetting. 
+		  8.0.7 - Изменена таблица GameHistory.
+		  8.0.6 - Изменена таблица DealerBlackJackSetting.
 		  8.0.5 - Добавлена таблица DealerBlackJackSetting. В таблице GameHistory добавена строка DealerCheating
 		  8.0.4 - В перечислении ролей добавлен SuperAdmin.
 		  8.0.3 - В таблице Users добавлены поля DataRemove, Role. Добавлены модели карт для Блэкджека.
